@@ -1,72 +1,186 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Header
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
-from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
 import uuid
-from datetime import datetime, timezone
-
+from pathlib import Path
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
+from datetime import datetime, timezone, timedelta
+import httpx
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
 app = FastAPI()
-
-# Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+# --------------- Models ---------------
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class User(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
 
-# Add your routes to the router instead of directly to app
+class SessionExchangeRequest(BaseModel):
+    session_id: str
+
+class WebinarRegistration(BaseModel):
+    full_name: str = Field(..., min_length=1)
+    email: EmailStr
+    phone: str = Field(..., min_length=6)
+    college: str = Field(..., min_length=1)
+    interested_role: str
+
+class MentorshipRequest(BaseModel):
+    name: str = Field(..., min_length=1)
+    email: EmailStr
+    phone: str = Field(..., min_length=6)
+    current_status: str
+    target_role: str
+    biggest_challenge: str
+    help_needed: str
+
+# --------------- Auth helpers ---------------
+
+async def get_current_user(request: Request) -> Optional[dict]:
+    token = request.cookies.get("session_token")
+    if not token:
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token = auth.split(" ", 1)[1]
+    if not token:
+        return None
+    session = await db.user_sessions.find_one({"session_token": token}, {"_id": 0})
+    if not session:
+        return None
+    expires_at = session.get("expires_at")
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at and expires_at < datetime.now(timezone.utc):
+        return None
+    user = await db.users.find_one({"user_id": session["user_id"]}, {"_id": 0})
+    return user
+
+# --------------- Routes ---------------
+
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "StartupPath API"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+# REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+@api_router.post("/auth/session")
+async def exchange_session(payload: SessionExchangeRequest, response: Response):
+    """Exchange session_id from Emergent OAuth for a persistent session_token."""
+    async with httpx.AsyncClient(timeout=15) as http:
+        r = await http.get(
+            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            headers={"X-Session-ID": payload.session_id},
+        )
+    if r.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    data = r.json()
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+    email = data["email"]
+    name = data.get("name", email)
+    picture = data.get("picture")
+    session_token = data["session_token"]
 
-# Include the router in the main app
+    existing = await db.users.find_one({"email": email}, {"_id": 0})
+    if existing:
+        user_id = existing["user_id"]
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {"name": name, "picture": picture}}
+        )
+    else:
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        await db.users.insert_one({
+            "user_id": user_id,
+            "email": email,
+            "name": name,
+            "picture": picture,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    await db.user_sessions.insert_one({
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": expires_at,
+        "created_at": datetime.now(timezone.utc),
+    })
+
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        max_age=7 * 24 * 60 * 60,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+    )
+    return {"user_id": user_id, "email": email, "name": name, "picture": picture}
+
+@api_router.get("/auth/me")
+async def auth_me(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return User(**user)
+
+@api_router.post("/auth/logout")
+async def logout(request: Request, response: Response):
+    token = request.cookies.get("session_token")
+    if not token:
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token = auth.split(" ", 1)[1]
+    if token:
+        await db.user_sessions.delete_one({"session_token": token})
+    response.delete_cookie("session_token", path="/")
+    return {"ok": True}
+
+# --------------- Lead capture ---------------
+
+@api_router.post("/webinar/register")
+async def register_webinar(payload: WebinarRegistration):
+    doc = payload.model_dump()
+    doc["id"] = str(uuid.uuid4())
+    doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    await db.webinar_registrations.insert_one(doc)
+    return {"id": doc["id"], "ok": True, "message": "You're in! Join the WhatsApp group to get updates."}
+
+@api_router.get("/webinar/registrations", response_model=List[dict])
+async def list_webinar_registrations():
+    items = await db.webinar_registrations.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
+
+@api_router.post("/mentorship/request")
+async def request_mentorship(payload: MentorshipRequest):
+    doc = payload.model_dump()
+    doc["id"] = str(uuid.uuid4())
+    doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    await db.mentorship_requests.insert_one(doc)
+    return {"id": doc["id"], "ok": True, "message": "हम आपसे 24-48 hours में संपर्क करेंगे"}
+
+@api_router.get("/mentorship/requests", response_model=List[dict])
+async def list_mentorship_requests():
+    items = await db.mentorship_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -76,13 +190,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
