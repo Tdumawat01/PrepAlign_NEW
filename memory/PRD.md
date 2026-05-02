@@ -1,4 +1,4 @@
-# StartupPath — Product Requirements Doc
+# PrepAlign — Product Requirements Doc
 
 ## Original Problem Statement
 Build a clean, modern, mobile-first landing website for a startup focused on helping Tier 2 and Tier 3 Indian students break into AI and startup roles without coding. Minimal, high-conversion, lead-capture focused. Primary goals: webinar registrations + WhatsApp community joins.
@@ -35,6 +35,7 @@ Build a clean, modern, mobile-first landing website for a startup focused on hel
   - Login (Google) + AuthCallback + Dashboard
   - Sticky mobile CTA bar + Navbar + Footer
 - Testing: 16/16 backend tests passing (pytest at `/app/backend/tests/test_backend.py`)
+- Rebranded from "StartupPath" to "PrepAlign" (Dec 2025)
 
 ## Backlog
 - P0: Replace WhatsApp placeholder link with real invite URL

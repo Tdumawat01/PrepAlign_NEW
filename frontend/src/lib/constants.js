@@ -6,6 +6,6 @@ export const API = `${BACKEND_URL}/api`;
 export const WHATSAPP_URL = "https://chat.whatsapp.com/XXXXXXXXXXXXXXXXX";
 
 export const BRAND = {
-  name: "StartupPath",
+  name: "PrepAlign",
   tagline: "Break into AI & Startup Roles — Without Coding",
 };

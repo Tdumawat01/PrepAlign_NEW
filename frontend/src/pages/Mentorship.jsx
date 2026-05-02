@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { API } from "../lib/constants";
+import { getUtmParams } from "../lib/utm";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
@@ -19,20 +20,23 @@ export default function Mentorship() {
     name: "", email: "", phone: "",
     current_status: "", target_role: "",
     biggest_challenge: "", help_needed: "",
+    referral_source: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+  const REQUIRED = ["name", "email", "phone", "current_status", "target_role", "biggest_challenge", "help_needed"];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    for (const k of Object.keys(form)) {
+    for (const k of REQUIRED) {
       if (!form[k]) { toast.error("Please fill all fields"); return; }
     }
     setSubmitting(true);
     try {
-      await axios.post(`${API}/mentorship/request`, form);
+      await axios.post(`${API}/mentorship/request`, { ...form, ...getUtmParams() });
       setSuccess(true);
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -153,6 +157,18 @@ export default function Mentorship() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="sm:col-span-2">
+              <Label className="text-xs font-bold uppercase tracking-wider">
+                How did you hear about us? <span className="text-neutral-400 font-normal normal-case">(optional)</span>
+              </Label>
+              <Input
+                data-testid="mentorship-input-referral"
+                placeholder="Friend's name, Instagram, LinkedIn…"
+                value={form.referral_source}
+                onChange={(e) => update("referral_source", e.target.value)}
+                className="mt-2 rounded-none border-neutral-950 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
             </div>
           </div>
 

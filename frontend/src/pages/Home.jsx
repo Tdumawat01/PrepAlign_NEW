@@ -72,7 +72,7 @@ export default function Home() {
               <img
                 src={heroImg}
                 alt="Student"
-                className="w-full h-[360px] md:h-[460px] object-cover grayscale border-2 border-neutral-950"
+                className="w-full h-[360px] md:h-[460px] object-cover border-2 border-neutral-950"
               />
               <div className="absolute -bottom-4 -left-4 bg-white border-2 border-neutral-950 px-4 py-3 hard-shadow-sm">
                 <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-neutral-500">Cohort</p>
@@ -163,7 +163,7 @@ export default function Home() {
             <img
               src={meetupImg}
               alt="Meetup"
-              className="w-full h-[320px] md:h-[420px] object-cover grayscale border-2 border-neutral-950"
+              className="w-full h-[320px] md:h-[420px] object-cover border-2 border-neutral-950"
             />
           </div>
           <div className="md:col-span-7">

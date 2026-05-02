@@ -41,6 +41,12 @@ class WebinarRegistration(BaseModel):
     phone: str = Field(..., min_length=6)
     college: str = Field(..., min_length=1)
     interested_role: str
+    referral_source: Optional[str] = None
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_term: Optional[str] = None
+    utm_content: Optional[str] = None
 
 class MentorshipRequest(BaseModel):
     name: str = Field(..., min_length=1)
@@ -50,6 +56,12 @@ class MentorshipRequest(BaseModel):
     target_role: str
     biggest_challenge: str
     help_needed: str
+    referral_source: Optional[str] = None
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    utm_term: Optional[str] = None
+    utm_content: Optional[str] = None
 
 # --------------- Auth helpers ---------------
 
@@ -78,7 +90,7 @@ async def get_current_user(request: Request) -> Optional[dict]:
 
 @api_router.get("/")
 async def root():
-    return {"message": "StartupPath API"}
+    return {"message": "PrepAlign API"}
 
 # REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
 @api_router.post("/auth/session")

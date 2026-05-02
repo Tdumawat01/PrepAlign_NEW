@@ -12,7 +12,7 @@ export default function About() {
             We help students<br /> get their <em className="font-serif">first</em> startup job.
           </h1>
           <p className="mt-8 text-lg text-neutral-600 max-w-2xl leading-relaxed">
-            StartupPath is a community-first platform built for students from Tier 2 and Tier 3
+            PrepAlign is a community-first platform built for students from Tier 2 and Tier 3
             Indian colleges. We’re not another course factory — we’re a movement that teaches you
             the real skills recruiters hire for: communication, networking, building in public,
             and portfolio craft.

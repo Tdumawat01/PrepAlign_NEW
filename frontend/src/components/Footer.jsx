@@ -54,7 +54,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 pt-8 border-t border-neutral-800 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-neutral-400">
-          <p>© {new Date().getFullYear()} StartupPath. Built for Tier 2 & Tier 3 India.</p>
+          <p>© {new Date().getFullYear()} PrepAlign. Built for Tier 2 & Tier 3 India.</p>
           <p>No code. Just career.</p>
         </div>
       </div>

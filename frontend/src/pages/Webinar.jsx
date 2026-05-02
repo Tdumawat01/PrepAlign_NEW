@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { API, WHATSAPP_URL } from "../lib/constants";
+import { getUtmParams } from "../lib/utm";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import {
@@ -19,6 +20,7 @@ const ROLES = [
 export default function Webinar() {
   const [form, setForm] = useState({
     full_name: "", email: "", phone: "", college: "", interested_role: "",
+    referral_source: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -35,7 +37,7 @@ export default function Webinar() {
     }
     setSubmitting(true);
     try {
-      await axios.post(`${API}/webinar/register`, form);
+      await axios.post(`${API}/webinar/register`, { ...form, ...getUtmParams() });
       setSuccess(true);
     } catch (err) {
       const msg = err?.response?.data?.detail?.[0]?.msg || err?.response?.data?.detail || "Something went wrong";
@@ -182,6 +184,16 @@ export default function Webinar() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label htmlFor="referral_source" className="text-xs font-bold uppercase tracking-wider">How did you hear about us? <span className="text-neutral-400 font-normal normal-case">(optional)</span></Label>
+                  <Input
+                    id="referral_source" data-testid="webinar-input-referral"
+                    placeholder="Friend's name, Instagram, LinkedIn…"
+                    value={form.referral_source}
+                    onChange={(e) => update("referral_source", e.target.value)}
+                    className="mt-2 rounded-none border-neutral-950 focus-visible:ring-0 focus-visible:ring-offset-0 h-11"
+                  />
                 </div>
               </div>
 

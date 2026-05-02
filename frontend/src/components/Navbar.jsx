@@ -23,9 +23,9 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2" data-testid="nav-logo">
           <div className="w-7 h-7 bg-neutral-950 flex items-center justify-center">
-            <span className="text-white text-[11px] font-black tracking-tighter">SP</span>
+            <span className="text-white text-[11px] font-black tracking-tighter">PA</span>
           </div>
-          <span className="font-black tracking-tight text-lg">StartupPath</span>
+          <span className="font-black tracking-tight text-lg">PrepAlign</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">

@@ -10,7 +10,7 @@ export default function Terms() {
       <div className="mt-10 space-y-8 text-neutral-700 leading-relaxed">
         <section>
           <h2 className="text-2xl font-black tracking-tight mb-3">1. Educational platform</h2>
-          <p>StartupPath is an educational community. Content, webinars, and mentorship are provided to help you build career-ready skills.</p>
+          <p>PrepAlign is an educational community. Content, webinars, and mentorship are provided to help you build career-ready skills.</p>
         </section>
         <section>
           <h2 className="text-2xl font-black tracking-tight mb-3">2. No job guarantee</h2>

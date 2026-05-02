@@ -26,7 +26,7 @@ export default function Privacy() {
         </section>
         <section>
           <h2 className="text-2xl font-black tracking-tight mb-3">5. Contact</h2>
-          <p>For privacy-related questions, reach us at <span className="font-semibold">hello@startuppath.in</span>.</p>
+          <p>For privacy-related questions, reach us at <span className="font-semibold">services@prepalign.com</span>.</p>
         </section>
       </div>
     </div>
