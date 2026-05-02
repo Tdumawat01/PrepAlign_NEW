@@ -1,0 +1,81 @@
+{
+  "theme": "Light",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "domain": "Education/Career/Startup",
+  "colors": {
+    "background": "#FFFFFF",
+    "foreground": "#0A0A0A",
+    "primary": "#0A0A0A",
+    "primary_foreground": "#FFFFFF",
+    "accent": "#25D366",
+    "accent_foreground": "#FFFFFF",
+    "muted": "#F5F5F5",
+    "muted_foreground": "#737373",
+    "border": "#E5E5E5"
+  },
+  "typography": {
+    "font_family_primary": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    "headings": {
+      "strategy": "Swiss Brutalist - Radical weight contrast (Black vs Regular), tight letter spacing",
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-semibold tracking-tight"
+    },
+    "body": "text-base leading-relaxed text-foreground",
+    "labels": "text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground"
+  },
+  "layout": {
+    "spacing_scale": "Generous spacing philosophy: p-6, p-8, p-12, p-16, p-24, p-32. Ensure containers with borders have internal padding.",
+    "grid_strategy": "The Tetris Grid (Mode A). Focus on asymmetry, bento layouts, and leaving empty cells for offset alignment.",
+    "border_radius": "rounded-none or rounded-sm (2px max) to maintain the Swiss high-contrast sharp aesthetic.",
+    "alignment": "Left-align dense content and paragraphs. Headings can be left-aligned for an editorial feel."
+  },
+  "surfaces": {
+    "header": "Solid Background (White) with a hard bottom border (border-b border-[#E5E5E5]) to ground the navigation.",
+    "cards": "Flat background, 1px solid border (border-border), no soft drop shadows. Use hard inner contrasts.",
+    "footer": "Contrast Shift: Deep Obsidian (#0A0A0A) background, stark white text, massive typographic CTA."
+  },
+  "components": {
+    "buttons": "Square or rounded-sm. Primary CTA (Webinar) in Black. WhatsApp CTA in Accent Green (#25D366). Use explicit hover states (e.g., hover:bg-neutral-800 hover:text-white).",
+    "forms": "Use Shadcn components but heavily customize. Remove the default rounded-md for rounded-none. Inputs should have 1px solid black border on focus.",
+    "navigation": "Visible links on desktop (no hamburger on desktop). Sticky header with z-50. Include both CTAs in the nav.",
+    "mobile_sticky_cta": "A fixed bottom bar on mobile viewports with 'Join Webinar' and 'WhatsApp' buttons."
+  },
+  "motion": {
+    "hover_states": "Crisp transformations. -translate-y-1 with solid block shadow, or simple high-contrast color inversion.",
+    "page_transitions": "Minimalist. Staggered fade-ins for bento grid items."
+  },
+  "images": [
+    {
+      "category": "hero_students",
+      "url": "https://images.unsplash.com/photo-1675664534136-51375fb40129?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjBjb2xsZWdlJTIwc3R1ZGVudHMlMjBsYXB0b3B8ZW58MHx8fHwxNzc3NzE3ODMxfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Indian student using laptop on bench"
+    },
+    {
+      "category": "social_proof_meetup",
+      "url": "https://images.unsplash.com/photo-1559223607-b4d0555ae227?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwbWVldHVwJTIwY3Jvd2R8ZW58MHx8fHwxNzc3NzE3ODMxfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Group of people in a white room (startup meetup vibe)"
+    },
+    {
+      "category": "company_logo",
+      "url": "https://images.unsplash.com/photo-1551263640-1c007852f616?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwzfHxzdGFydHVwJTIwbG9nb3xlbnwwfHx8fDE3Nzc3MTc4MzF8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Black app sign on white wall to act as a placeholder for company logos"
+    }
+  ],
+  "icons": {
+    "library": "lucide-react",
+    "style": "Minimal, sharp, 1.5 stroke width."
+  },
+  "testing": {
+    "attributes": "All interactive and key informational elements MUST include data-testid (e.g., data-testid='hero-whatsapp-btn', data-testid='webinar-submit-btn')."
+  },
+  "instructions_to_main_agent": [
+    "Design specifically for the SF Pro (-apple-system) font stack. Use strong weight contrast (e.g., font-black for headings, font-normal for body) to build hierarchy without color.",
+    "Maintain strict monochrome (black/white/gray) for the entire UI. The ONLY color permitted is the WhatsApp Green (#25D366) for WhatsApp-related CTAs.",
+    "Apply the Tailwind `grayscale` utility class to ALL images to ensure they match the monochrome aesthetic, allowing them to blend seamlessly with the Swiss Brutalist layout.",
+    "Build a pure HTML/Tailwind high-conversion marketing layout for the Home page, avoiding default Shadcn container styles. Use asymmetric bento grids (Mode A).",
+    "Implement a sticky mobile CTA bar at the bottom of the screen (visible only on sm/md viewports) offering 'Join Free Webinar' and 'Join WhatsApp Community'.",
+    "For the Mentorship Inquiry form, include a Hindi-friendly confirmation message (e.g., 'Shukriya! Hum jaldi aapse connect karenge.') upon successful submission.",
+    "Ensure the Webinar registration form captures Name, Email, Phone, College, and Interested Role (dropdown) and displays a success state directing to the WhatsApp community."
+  ]
+}
