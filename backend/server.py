@@ -164,7 +164,10 @@ async def register_webinar(payload: WebinarRegistration):
     return {"id": doc["id"], "ok": True, "message": "You're in! Join the WhatsApp group to get updates."}
 
 @api_router.get("/webinar/registrations", response_model=List[dict])
-async def list_webinar_registrations():
+async def list_webinar_registrations(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     items = await db.webinar_registrations.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     return items
 
@@ -177,7 +180,10 @@ async def request_mentorship(payload: MentorshipRequest):
     return {"id": doc["id"], "ok": True, "message": "हम आपसे 24-48 hours में संपर्क करेंगे"}
 
 @api_router.get("/mentorship/requests", response_model=List[dict])
-async def list_mentorship_requests():
+async def list_mentorship_requests(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     items = await db.mentorship_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     return items
 
