@@ -54,6 +54,12 @@ export default function Dashboard() {
           <p className="label-eyebrow">Action</p>
           <p className="mt-3 text-2xl font-black tracking-tight">Request 1:1 mentorship →</p>
         </Link>
+        {user.is_admin ? (
+          <Link to="/admin" className="sm:col-span-2 border-r border-b border-neutral-200 p-8 bg-neutral-950 text-white hover:bg-neutral-800 transition-colors" data-testid="dashboard-admin-card">
+            <p className="label-eyebrow text-neutral-500">Admin</p>
+            <p className="mt-3 text-2xl font-black tracking-tight">Open admin dashboard →</p>
+          </Link>
+        ) : null}
       </div>
     </div>
   );

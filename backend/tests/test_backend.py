@@ -1,4 +1,4 @@
-"""Backend API tests for StartupPath landing site."""
+"""Backend API tests for PrepAlign landing site (including Admin dashboard endpoints)."""
 import os
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -21,6 +21,8 @@ if not BASE_URL:
 
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'test_database')
+# Admin email configured in /app/backend/.env
+ADMIN_EMAIL = "tanishdumawat01@gmail.com"
 
 
 @pytest.fixture(scope="session")
@@ -37,16 +39,13 @@ def api_client():
     return s
 
 
-@pytest.fixture(scope="session")
-def seeded_session(mongo_db):
-    """Seed a user + session directly so we can test /auth/me + logout."""
+def _seed_user_session(mongo_db, email: str):
     user_id = f"test-user-{uuid.uuid4().hex[:8]}"
     session_token = f"test_session_{uuid.uuid4().hex}"
-    email = f"TEST_{uuid.uuid4().hex[:6]}@example.com"
     mongo_db.users.insert_one({
         "user_id": user_id,
         "email": email,
-        "name": "Test User",
+        "name": f"Test {email}",
         "picture": "https://via.placeholder.com/150",
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
@@ -56,10 +55,58 @@ def seeded_session(mongo_db):
         "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
         "created_at": datetime.now(timezone.utc),
     })
-    yield {"user_id": user_id, "session_token": session_token, "email": email}
-    # cleanup
-    mongo_db.users.delete_one({"user_id": user_id})
+    return {"user_id": user_id, "session_token": session_token, "email": email}
+
+
+@pytest.fixture(scope="session")
+def seeded_session(mongo_db):
+    """Seed a non-admin user + session for /auth/me and logout tests."""
+    email = f"TEST_{uuid.uuid4().hex[:6]}@example.com"
+    s = _seed_user_session(mongo_db, email)
+    yield s
+    mongo_db.users.delete_one({"user_id": s["user_id"]})
+    mongo_db.user_sessions.delete_many({"session_token": s["session_token"]})
+
+
+@pytest.fixture(scope="session")
+def admin_session(mongo_db):
+    """Seed an admin user + session (email matches ADMIN_EMAILS env)."""
+    # If admin user already exists (e.g. from real OAuth), reuse user_id
+    existing = mongo_db.users.find_one({"email": ADMIN_EMAIL})
+    if existing:
+        user_id = existing["user_id"]
+        created_user = False
+    else:
+        user_id = f"test-admin-{uuid.uuid4().hex[:8]}"
+        mongo_db.users.insert_one({
+            "user_id": user_id,
+            "email": ADMIN_EMAIL,
+            "name": "Admin User",
+            "picture": "https://via.placeholder.com/150",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        created_user = True
+    session_token = f"test_admin_session_{uuid.uuid4().hex}"
+    mongo_db.user_sessions.insert_one({
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+        "created_at": datetime.now(timezone.utc),
+    })
+    yield {"user_id": user_id, "session_token": session_token, "email": ADMIN_EMAIL}
     mongo_db.user_sessions.delete_many({"session_token": session_token})
+    if created_user:
+        mongo_db.users.delete_one({"user_id": user_id})
+
+
+@pytest.fixture(scope="session")
+def non_admin_session(mongo_db):
+    """Seed a regular (non-admin) user + session."""
+    email = f"TEST_nonadmin_{uuid.uuid4().hex[:6]}@example.com"
+    s = _seed_user_session(mongo_db, email)
+    yield s
+    mongo_db.users.delete_one({"user_id": s["user_id"]})
+    mongo_db.user_sessions.delete_many({"session_token": s["session_token"]})
 
 
 # --------------- Root ---------------
@@ -84,6 +131,7 @@ class TestWebinar:
             "phone": "9876543210",
             "college": "TEST College",
             "interested_role": "AI Product Manager",
+            "utm_source": "TEST_google",
         }
         r = api_client.post(f"{BASE_URL}/api/webinar/register", json=payload)
         assert r.status_code == 200, r.text
@@ -112,19 +160,32 @@ class TestWebinar:
         r = api_client.post(f"{BASE_URL}/api/webinar/register", json={"email": "a@b.com"})
         assert r.status_code == 422
 
-    def test_list_registrations_no_id(self, api_client):
-        r = api_client.get(f"{BASE_URL}/api/webinar/registrations")
-        assert r.status_code == 200
+    def test_list_registrations_unauthenticated_401(self):
+        r = requests.get(f"{BASE_URL}/api/webinar/registrations")
+        assert r.status_code == 401
+
+    def test_list_registrations_non_admin_403(self, non_admin_session):
+        r = requests.get(
+            f"{BASE_URL}/api/webinar/registrations",
+            headers={"Authorization": f"Bearer {non_admin_session['session_token']}"},
+        )
+        assert r.status_code == 403
+
+    def test_list_registrations_admin_200(self, admin_session):
+        r = requests.get(
+            f"{BASE_URL}/api/webinar/registrations",
+            headers={"Authorization": f"Bearer {admin_session['session_token']}"},
+        )
+        assert r.status_code == 200, r.text
         items = r.json()
         assert isinstance(items, list)
         assert len(items) >= 1
         for item in items:
             assert "_id" not in item
-        # ensure our created id is present
         ids = [i.get("id") for i in items]
         assert any(cid in ids for cid in TestWebinar.created_ids)
 
-    def test_cleanup_webinar(self, mongo_db):
+    def test_zzz_cleanup_webinar(self, mongo_db):
         if TestWebinar.created_ids:
             mongo_db.webinar_registrations.delete_many({"id": {"$in": TestWebinar.created_ids}})
 
@@ -150,7 +211,6 @@ class TestMentorship:
         assert data.get("ok") is True
         assert "id" in data
         msg = data.get("message", "")
-        # Hindi message check
         assert "24-48" in msg
         assert "संपर्क" in msg or "हम" in msg
         TestMentorship.created_ids.append(data["id"])
@@ -172,24 +232,76 @@ class TestMentorship:
         r = api_client.post(f"{BASE_URL}/api/mentorship/request", json=payload)
         assert r.status_code == 422
 
-    def test_list_requests_no_id(self, api_client):
-        r = api_client.get(f"{BASE_URL}/api/mentorship/requests")
-        assert r.status_code == 200
+    def test_list_requests_unauthenticated_401(self):
+        r = requests.get(f"{BASE_URL}/api/mentorship/requests")
+        assert r.status_code == 401
+
+    def test_list_requests_non_admin_403(self, non_admin_session):
+        r = requests.get(
+            f"{BASE_URL}/api/mentorship/requests",
+            headers={"Authorization": f"Bearer {non_admin_session['session_token']}"},
+        )
+        assert r.status_code == 403
+
+    def test_list_requests_admin_200(self, admin_session):
+        r = requests.get(
+            f"{BASE_URL}/api/mentorship/requests",
+            headers={"Authorization": f"Bearer {admin_session['session_token']}"},
+        )
+        assert r.status_code == 200, r.text
         items = r.json()
         assert isinstance(items, list)
         for item in items:
             assert "_id" not in item
 
-    def test_cleanup_mentorship(self, mongo_db):
+    def test_zzz_cleanup_mentorship(self, mongo_db):
         if TestMentorship.created_ids:
             mongo_db.mentorship_requests.delete_many({"id": {"$in": TestMentorship.created_ids}})
+
+
+# --------------- Admin Stats ---------------
+
+class TestAdminStats:
+    def test_stats_unauthenticated_401(self):
+        r = requests.get(f"{BASE_URL}/api/admin/stats")
+        assert r.status_code == 401
+
+    def test_stats_non_admin_403(self, non_admin_session):
+        r = requests.get(
+            f"{BASE_URL}/api/admin/stats",
+            headers={"Authorization": f"Bearer {non_admin_session['session_token']}"},
+        )
+        assert r.status_code == 403
+
+    def test_stats_admin_200(self, admin_session):
+        r = requests.get(
+            f"{BASE_URL}/api/admin/stats",
+            headers={"Authorization": f"Bearer {admin_session['session_token']}"},
+        )
+        assert r.status_code == 200, r.text
+        data = r.json()
+        # Structure validation
+        assert "webinar" in data and isinstance(data["webinar"], dict)
+        assert "mentorship" in data and isinstance(data["mentorship"], dict)
+        assert "users_total" in data and isinstance(data["users_total"], int)
+        assert "top_utm_sources" in data and isinstance(data["top_utm_sources"], list)
+
+        for key in ("total", "today", "last_7_days"):
+            assert key in data["webinar"], f"webinar.{key} missing"
+            assert isinstance(data["webinar"][key], int)
+            assert key in data["mentorship"], f"mentorship.{key} missing"
+            assert isinstance(data["mentorship"][key], int)
+
+        # top_utm_sources each has source+count
+        for item in data["top_utm_sources"]:
+            assert "source" in item
+            assert "count" in item and isinstance(item["count"], int)
 
 
 # --------------- Auth ---------------
 
 class TestAuth:
-    def test_me_no_cookie(self, api_client):
-        # Use a clean session to avoid cookies leaking from previous tests
+    def test_me_no_cookie(self):
         r = requests.get(f"{BASE_URL}/api/auth/me")
         assert r.status_code == 401
 
@@ -202,7 +314,6 @@ class TestAuth:
 
     def test_me_with_seeded_session(self, seeded_session):
         token = seeded_session["session_token"]
-        # via Authorization header
         r = requests.get(
             f"{BASE_URL}/api/auth/me",
             headers={"Authorization": f"Bearer {token}"},
@@ -212,6 +323,8 @@ class TestAuth:
         assert data["user_id"] == seeded_session["user_id"]
         assert data["email"] == seeded_session["email"]
         assert "_id" not in data
+        # Non-admin email → is_admin False
+        assert data.get("is_admin") is False
 
     def test_me_with_cookie(self, seeded_session):
         token = seeded_session["session_token"]
@@ -222,9 +335,19 @@ class TestAuth:
         assert r.status_code == 200
         data = r.json()
         assert data["user_id"] == seeded_session["user_id"]
+        assert data.get("is_admin") is False
+
+    def test_me_admin_is_admin_true(self, admin_session):
+        r = requests.get(
+            f"{BASE_URL}/api/auth/me",
+            headers={"Authorization": f"Bearer {admin_session['session_token']}"},
+        )
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["email"].lower() == ADMIN_EMAIL.lower()
+        assert data.get("is_admin") is True
 
     def test_logout_clears_session(self, mongo_db):
-        # Create a fresh session for logout test
         user_id = f"test-user-{uuid.uuid4().hex[:8]}"
         session_token = f"test_session_{uuid.uuid4().hex}"
         email = f"TEST_{uuid.uuid4().hex[:6]}@example.com"
@@ -241,7 +364,6 @@ class TestAuth:
             "created_at": datetime.now(timezone.utc),
         })
 
-        # Logout
         r = requests.post(
             f"{BASE_URL}/api/auth/logout",
             headers={"Authorization": f"Bearer {session_token}"},
@@ -249,11 +371,9 @@ class TestAuth:
         assert r.status_code == 200
         assert r.json().get("ok") is True
 
-        # Session should be deleted
         sess = mongo_db.user_sessions.find_one({"session_token": session_token})
         assert sess is None
 
-        # /auth/me with this token now fails
         r2 = requests.get(
             f"{BASE_URL}/api/auth/me",
             headers={"Authorization": f"Bearer {session_token}"},

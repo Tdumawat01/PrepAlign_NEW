@@ -86,6 +86,20 @@ async def get_current_user(request: Request) -> Optional[dict]:
     user = await db.users.find_one({"user_id": session["user_id"]}, {"_id": 0})
     return user
 
+
+def _admin_email_set() -> set:
+    raw = os.environ.get("ADMIN_EMAILS", "")
+    return {e.strip().lower() for e in raw.split(",") if e.strip()}
+
+
+async def require_admin(request: Request) -> dict:
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.get("email", "").lower() not in _admin_email_set():
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
 # --------------- Routes ---------------
 
 @api_router.get("/")
@@ -151,7 +165,8 @@ async def auth_me(request: Request):
     user = await get_current_user(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return User(**user)
+    is_admin = user.get("email", "").lower() in _admin_email_set()
+    return {**User(**user).model_dump(), "is_admin": is_admin}
 
 @api_router.post("/auth/logout")
 async def logout(request: Request, response: Response):
@@ -177,10 +192,8 @@ async def register_webinar(payload: WebinarRegistration):
 
 @api_router.get("/webinar/registrations", response_model=List[dict])
 async def list_webinar_registrations(request: Request):
-    user = await get_current_user(request)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    items = await db.webinar_registrations.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    await require_admin(request)
+    items = await db.webinar_registrations.find({}, {"_id": 0}).sort("created_at", -1).to_list(2000)
     return items
 
 @api_router.post("/mentorship/request")
@@ -193,11 +206,44 @@ async def request_mentorship(payload: MentorshipRequest):
 
 @api_router.get("/mentorship/requests", response_model=List[dict])
 async def list_mentorship_requests(request: Request):
-    user = await get_current_user(request)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    items = await db.mentorship_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    await require_admin(request)
+    items = await db.mentorship_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(2000)
     return items
+
+
+@api_router.get("/admin/stats")
+async def admin_stats(request: Request):
+    await require_admin(request)
+    now = datetime.now(timezone.utc)
+    today_cutoff = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    week_cutoff = (now - timedelta(days=7)).isoformat()
+
+    webinar_total = await db.webinar_registrations.count_documents({})
+    webinar_today = await db.webinar_registrations.count_documents({"created_at": {"$gte": today_cutoff}})
+    webinar_week = await db.webinar_registrations.count_documents({"created_at": {"$gte": week_cutoff}})
+
+    mentorship_total = await db.mentorship_requests.count_documents({})
+    mentorship_today = await db.mentorship_requests.count_documents({"created_at": {"$gte": today_cutoff}})
+    mentorship_week = await db.mentorship_requests.count_documents({"created_at": {"$gte": week_cutoff}})
+
+    users_total = await db.users.count_documents({})
+
+    # Top UTM sources (across webinar regs)
+    pipeline = [
+        {"$match": {"utm_source": {"$ne": None, "$exists": True}}},
+        {"$group": {"_id": "$utm_source", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 5},
+    ]
+    top_utm_raw = await db.webinar_registrations.aggregate(pipeline).to_list(5)
+    top_utm = [{"source": x["_id"], "count": x["count"]} for x in top_utm_raw]
+
+    return {
+        "webinar": {"total": webinar_total, "today": webinar_today, "last_7_days": webinar_week},
+        "mentorship": {"total": mentorship_total, "today": mentorship_today, "last_7_days": mentorship_week},
+        "users_total": users_total,
+        "top_utm_sources": top_utm,
+    }
 
 app.include_router(api_router)
 
