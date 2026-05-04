@@ -22,9 +22,9 @@ export default function About() {
 
       <section className="mx-auto max-w-5xl px-5 sm:px-8 py-16 md:py-24 grid md:grid-cols-3 gap-0 border-t border-l border-neutral-200">
         {[
-          { n: "10,000+", l: "Learners in our community" },
-          { n: "10+",     l: "Offline meetups across India" },
-          { n: "Top",     l: "Company collaborations" },
+          { n: "5,000+", l: "Learners in our community" },
+          { n: "35+",    l: "Offline meetups across India" },
+          { n: "15+",    l: "Company collaborations" },
         ].map((x, i) => (
           <div key={i} className="border-r border-b border-neutral-200 p-8" data-testid={`about-stat-${i}`}>
             <p className="text-4xl md:text-6xl font-black tracking-tighter">{x.n}</p>
@@ -43,13 +43,24 @@ export default function About() {
           We will. Through live sessions, accountability groups, offline meetups, and 1:1
           mentorship — we turn ambitious students into hireable operators.
         </p>
+        <p className="mt-6 text-neutral-600 leading-relaxed">
+          We are on a mission to help students from Tier 2 and Tier 3 colleges break into
+          AI and startup roles through practical skills, strong communication, and real-world
+          exposure.
+        </p>
+        <p className="mt-6 text-sm text-neutral-500">
+          For collaborations or queries, reach out at:{" "}
+          <a href="mailto:services@triple9.com" className="underline font-semibold text-neutral-950">
+            services@triple9.com
+          </a>
+        </p>
         <div className="mt-10 flex flex-wrap gap-3">
           <Link
             to="/webinar"
             className="inline-flex items-center gap-2 bg-neutral-950 text-white px-6 py-3 font-bold"
             data-testid="about-webinar-btn"
           >
-            Join Free Webinar <ArrowUpRight className="w-4 h-4" />
+            Reserve Your Free Spot <ArrowUpRight className="w-4 h-4" />
           </Link>
           <Link
             to="/mentorship"

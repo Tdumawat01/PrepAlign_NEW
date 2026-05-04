@@ -19,7 +19,7 @@ export default function Footer() {
                 className="inline-flex items-center gap-2 bg-white text-neutral-950 px-6 py-3 font-bold hover:bg-neutral-200"
                 data-testid="footer-webinar-btn"
               >
-                Join Free Webinar <ArrowUpRight className="w-4 h-4" />
+                Reserve Your Free Spot <ArrowUpRight className="w-4 h-4" />
               </Link>
               <a
                 href={WHATSAPP_URL}

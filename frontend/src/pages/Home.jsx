@@ -29,18 +29,20 @@ export default function Home() {
       <section className="border-b border-neutral-200">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-16 md:pt-24 pb-12 md:pb-20 grid md:grid-cols-12 gap-10 items-end">
           <div className="md:col-span-8 reveal reveal-1">
-            <p className="label-eyebrow mb-5">For Tier 2 & Tier 3 India · 2026</p>
+            <p className="label-eyebrow mb-5">For Tier 2 & Tier 3 India</p>
             <h1 className="text-5xl sm:text-6xl lg:text-[88px] font-black tracking-[-0.04em] leading-[0.9]">
-              Break into<br />
-              AI & Startup<br />
-              Roles —
+              Get Your First<br />
+              AI or Startup<br />
+              Job
               <span className="inline-block ml-3 px-3 align-middle border-2 border-neutral-950 bg-[#25D366] text-black text-3xl md:text-4xl font-black tracking-tight">
                 without coding
               </span>
             </h1>
             <p className="mt-7 text-lg md:text-xl text-neutral-600 max-w-2xl leading-relaxed">
-              Learn communication, networking, and build a portfolio that gets you hired —
-              even if you’re from a Tier 2/3 college.
+              No coding. No IIT/NIT. Just the skills that actually get you hired.
+            </p>
+            <p className="mt-3 text-sm md:text-base text-neutral-500 max-w-2xl">
+              Built to help students get real outcomes, not just learn.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
               <Link
@@ -48,7 +50,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 bg-neutral-950 text-white px-7 py-4 font-bold hard-shadow"
                 data-testid="hero-webinar-btn"
               >
-                <Ticket className="w-5 h-5" /> Join Free Webinar
+                <Ticket className="w-5 h-5" /> Reserve Your Free Spot
               </Link>
               <a
                 href={WHATSAPP_URL}
@@ -59,6 +61,11 @@ export default function Home() {
               >
                 <MessageCircle className="w-5 h-5" /> Join WhatsApp Community
               </a>
+            </div>
+            <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6 text-xs text-neutral-500">
+              <span>Limited seats for live interaction</span>
+              <span className="hidden sm:inline text-neutral-300">·</span>
+              <span>Get updates and resources directly on WhatsApp</span>
             </div>
             <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-neutral-500">
               <span className="flex items-center gap-2"><Check className="w-4 h-4 text-neutral-950" /> 100% Free</span>
@@ -76,7 +83,7 @@ export default function Home() {
               />
               <div className="absolute -bottom-4 -left-4 bg-white border-2 border-neutral-950 px-4 py-3 hard-shadow-sm">
                 <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-neutral-500">Cohort</p>
-                <p className="text-2xl font-black tracking-tight">10,000+</p>
+                <p className="text-2xl font-black tracking-tight">5,000+</p>
               </div>
             </div>
           </div>
@@ -168,14 +175,17 @@ export default function Home() {
           </div>
           <div className="md:col-span-7">
             <p className="label-eyebrow mb-4">Proof</p>
-            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter leading-[0.95] mb-10">
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter leading-[0.95] mb-4">
               A movement, not a course.
             </h2>
+            <p className="text-neutral-600 mb-10 max-w-xl">
+              This is not a course. You’ll actually execute.
+            </p>
             <div className="grid grid-cols-3 gap-0 border-t border-l border-neutral-200">
               {[
-                { n: "10,000+", l: "Learners impacted" },
-                { n: "10+",     l: "Offline meetups" },
-                { n: "Top",     l: "Company collabs" },
+                { n: "5,000+", l: "Learners impacted" },
+                { n: "35+",    l: "Offline meetups" },
+                { n: "15+",    l: "Company collaborations" },
               ].map((s, i) => (
                 <div key={i} className="border-r border-b border-neutral-200 p-6 md:p-8" data-testid={`stat-${i}`}>
                   <p className="text-3xl md:text-5xl font-black tracking-tighter">{s.n}</p>
@@ -183,6 +193,9 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            <p className="mt-6 text-sm text-neutral-500">
+              1,000+ students already learning and applying these strategies.
+            </p>
           </div>
         </div>
       </section>
@@ -203,7 +216,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 bg-neutral-950 text-white px-8 py-4 font-bold hard-shadow"
               data-testid="final-webinar-btn"
             >
-              Join Free Webinar <ArrowUpRight className="w-4 h-4" />
+              Reserve Your Free Spot <ArrowUpRight className="w-4 h-4" />
             </Link>
             <a
               href={WHATSAPP_URL}
@@ -215,6 +228,9 @@ export default function Home() {
               Join WhatsApp <ArrowUpRight className="w-4 h-4" />
             </a>
           </div>
+          <p className="mt-4 text-xs text-neutral-500">
+            Limited seats for live interaction · Get updates and resources directly on WhatsApp
+          </p>
         </div>
       </section>
     </div>

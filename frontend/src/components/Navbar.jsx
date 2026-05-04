@@ -62,7 +62,7 @@ export default function Navbar() {
             className="inline-flex items-center bg-neutral-950 text-white px-4 py-2 text-sm font-bold hover:bg-neutral-800"
             data-testid="nav-webinar-btn"
           >
-            Join Free Webinar
+            Reserve Your Free Spot
           </Link>
           {user ? (
             <button

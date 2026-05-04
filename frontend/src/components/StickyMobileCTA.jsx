@@ -14,7 +14,7 @@ export default function StickyMobileCTA() {
         className="flex items-center justify-center gap-2 bg-neutral-950 text-white py-3.5 text-sm font-bold"
         data-testid="sticky-webinar-btn"
       >
-        <Ticket className="w-4 h-4" /> Join Webinar
+        <Ticket className="w-4 h-4" /> Reserve Spot
       </Link>
       <a
         href={WHATSAPP_URL}
