@@ -10,6 +10,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "../components/ui/select";
 import { Check } from "lucide-react";
+import { Reveal } from "../components/Reveal";
 
 const HELP_OPTIONS = [
   "Resume", "Interviews", "Career clarity", "Networking",
@@ -79,11 +80,12 @@ export default function Mentorship() {
       </section>
 
       <section className="mx-auto max-w-3xl px-5 sm:px-8 py-16">
-        <form
-          onSubmit={handleSubmit}
-          className="border-2 border-neutral-950 bg-white p-6 md:p-10 hard-shadow"
-          data-testid="mentorship-form"
-        >
+        <Reveal>
+          <form
+            onSubmit={handleSubmit}
+            className="border-2 border-neutral-950 bg-white p-6 md:p-10 hard-shadow"
+            data-testid="mentorship-form"
+          >
           <div className="grid sm:grid-cols-2 gap-5">
             <div>
               <Label className="text-xs font-bold uppercase tracking-wider">Name</Label>
@@ -174,12 +176,13 @@ export default function Mentorship() {
 
           <button
             type="submit" disabled={submitting}
-            className="mt-7 w-full bg-neutral-950 text-white py-4 font-bold hover:bg-neutral-800 disabled:opacity-60"
+            className="btn-press mt-7 w-full bg-neutral-950 text-white py-4 font-bold hover:bg-neutral-800 disabled:opacity-60"
             data-testid="mentorship-submit-btn"
           >
             {submitting ? "Sending…" : "Request Mentorship"}
           </button>
         </form>
+        </Reveal>
       </section>
     </div>
   );

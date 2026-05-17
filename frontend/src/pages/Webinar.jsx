@@ -9,6 +9,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "../components/ui/select";
 import { Check, MessageCircle, Briefcase, Sparkles, PenTool, Video, Megaphone } from "lucide-react";
+import { Reveal, Stagger, StaggerItem } from "../components/Reveal";
 
 const ROLES = [
   { value: "Founder's Office",     label: "Founder’s Office" },
@@ -89,7 +90,7 @@ export default function Webinar() {
               Explore high-growth AI &amp; startup career paths beyond coding — and understand what actually fits your strengths, interests, and future goals.
             </p>
 
-            <div className="mt-12 grid sm:grid-cols-2 gap-0 border-t border-l border-neutral-200">
+            <Stagger className="mt-12 grid sm:grid-cols-2 gap-0 border-t border-l border-neutral-200" stagger={0.07}>
               {[
                 { icon: Briefcase, t: "Founder’s Office opportunities in startups" },
                 { icon: Sparkles,  t: "GTM Engineer & AI operations careers" },
@@ -97,16 +98,17 @@ export default function Webinar() {
                 { icon: Video,     t: "Video Editing & Graphic Design careers" },
                 { icon: Megaphone, t: "Brand, Content & creator economy roles" },
               ].map(({ icon: Icon, t }, i) => (
-                <div
+                <StaggerItem
                   key={i}
-                  className="border-r border-b border-neutral-200 p-6 flex items-start gap-4"
-                  data-testid={`learn-item-${i}`}
+                  className="card-lift border-r border-b border-neutral-200 p-6 flex items-start gap-4 hover:bg-neutral-50"
                 >
-                  <Icon className="w-5 h-5 mt-1" strokeWidth={1.5} />
-                  <p className="font-semibold tracking-tight">{t}</p>
-                </div>
+                  <div className="flex items-start gap-4" data-testid={`learn-item-${i}`}>
+                    <Icon className="w-5 h-5 mt-1" strokeWidth={1.5} />
+                    <p className="font-semibold tracking-tight">{t}</p>
+                  </div>
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
 
             <div className="mt-12">
               <p className="label-eyebrow mb-4">What you’ll learn</p>
@@ -144,11 +146,12 @@ export default function Webinar() {
           </div>
 
           <div className="md:col-span-5">
-            <form
-              onSubmit={handleSubmit}
-              className="border-2 border-neutral-950 bg-white p-6 md:p-8 hard-shadow"
-              data-testid="webinar-form"
-            >
+            <Reveal delay={0.15}>
+              <form
+                onSubmit={handleSubmit}
+                className="border-2 border-neutral-950 bg-white p-6 md:p-8 hard-shadow"
+                data-testid="webinar-form"
+              >
               <p className="label-eyebrow mb-2">Reserve your spot</p>
               <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-6">Free • Live • Career Session</h2>
 
@@ -226,13 +229,14 @@ export default function Webinar() {
 
               <button
                 type="submit" disabled={submitting}
-                className="mt-6 w-full bg-neutral-950 text-white py-4 font-bold hover:bg-neutral-800 disabled:opacity-60"
+                className="btn-press mt-6 w-full bg-neutral-950 text-white py-4 font-bold hover:bg-neutral-800 disabled:opacity-60"
                 data-testid="webinar-submit-btn"
               >
                 {submitting ? "Reserving…" : "Reserve My Free Spot"}
               </button>
               <p className="mt-3 text-xs text-neutral-500">Limited seats for live interaction &amp; Q&amp;A</p>
-            </form>
+              </form>
+            </Reveal>
           </div>
         </div>
       </section>

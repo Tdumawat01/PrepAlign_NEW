@@ -51,8 +51,8 @@ export default function Navbar() {
               to={l.to}
               end={l.to === "/"}
               className={({ isActive }) =>
-                `text-sm font-semibold tracking-tight ${
-                  isActive ? "text-neutral-950" : "text-neutral-500 hover:text-neutral-950"
+                `nav-underline text-sm font-semibold tracking-tight ${
+                  isActive ? "is-active text-neutral-950" : "text-neutral-500 hover:text-neutral-950"
                 }`
               }
               data-testid={`nav-link-${l.label.toLowerCase()}`}
