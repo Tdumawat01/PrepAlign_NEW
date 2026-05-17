@@ -8,13 +8,15 @@ import { Label } from "../components/ui/label";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "../components/ui/select";
-import { Check, MessageCircle, Mic, Users, Briefcase, GraduationCap } from "lucide-react";
+import { Check, MessageCircle, Briefcase, Sparkles, PenTool, Video, Megaphone } from "lucide-react";
 
 const ROLES = [
-  { value: "Product",  label: "Product" },
-  { value: "Growth",   label: "Growth" },
-  { value: "AI Ops",   label: "AI Ops" },
-  { value: "Not Sure", label: "Not Sure" },
+  { value: "Founder's Office",     label: "Founder’s Office" },
+  { value: "GTM Engineer",         label: "GTM Engineer" },
+  { value: "Product Design",       label: "Product Design" },
+  { value: "Video / Graphic Design", label: "Video / Graphic Design" },
+  { value: "Brand & Content",      label: "Brand & Content" },
+  { value: "Still Exploring",      label: "Still Exploring" },
 ];
 
 export default function Webinar() {
@@ -79,21 +81,21 @@ export default function Webinar() {
       <section className="border-b border-neutral-200">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 md:py-24 grid md:grid-cols-12 gap-12">
           <div className="md:col-span-7">
-            <p className="label-eyebrow mb-5">Free live workshop</p>
+            <p className="label-eyebrow mb-5">Free Live Career Series</p>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-[0.95]">
-              How to Get a<br />Startup Job<br />Without Coding<br />in 2026.
+              Clarity About<br />Your Career<br />in 2026.
             </h1>
             <p className="mt-6 text-lg text-neutral-600 max-w-xl">
-              For students, fresh graduates & non-tech folks who are done being ignored by recruiters.
+              Explore high-growth AI &amp; startup career paths beyond coding — and understand what actually fits your strengths, interests, and future goals.
             </p>
 
             <div className="mt-12 grid sm:grid-cols-2 gap-0 border-t border-l border-neutral-200">
               {[
-                { icon: Briefcase,     t: "Roadmap to AI & startup roles" },
-                { icon: GraduationCap, t: "How to stand out without IIT/NIT" },
-                { icon: Mic,           t: "Real interview questions" },
-                { icon: Users,         t: "Networking & referral strategies" },
-                { icon: Check,         t: "Live resume teardown" },
+                { icon: Briefcase, t: "Founder’s Office opportunities in startups" },
+                { icon: Sparkles,  t: "GTM Engineer & AI operations careers" },
+                { icon: PenTool,   t: "Product Design & creative problem solving" },
+                { icon: Video,     t: "Video Editing & Graphic Design careers" },
+                { icon: Megaphone, t: "Brand, Content & creator economy roles" },
               ].map(({ icon: Icon, t }, i) => (
                 <div
                   key={i}
@@ -107,10 +109,35 @@ export default function Webinar() {
             </div>
 
             <div className="mt-12">
+              <p className="label-eyebrow mb-4">What you’ll learn</p>
+              <ul className="grid sm:grid-cols-2 gap-2 text-sm">
+                {[
+                  "Which non-tech roles are growing in AI/startups",
+                  "Salary ranges and career progression",
+                  "Skills required to break into each role",
+                  "How to stand out without IIT/NIT background",
+                  "Building portfolio & proof of work",
+                  "Networking, cold outreach & LinkedIn strategy",
+                  "Build in public and grow online presence",
+                  "Real examples and career roadmaps",
+                ].map((x) => (
+                  <li key={x} className="flex items-start gap-2"><Check className="w-4 h-4 mt-0.5 shrink-0" /> <span>{x}</span></li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-12">
               <p className="label-eyebrow mb-4">Who should attend</p>
               <ul className="grid sm:grid-cols-2 gap-2 text-sm">
-                {["Final year students", "Fresh graduates", "Non-tech background", "People struggling to get interviews"].map((x) => (
-                  <li key={x} className="flex items-center gap-2"><Check className="w-4 h-4" /> {x}</li>
+                {[
+                  "Students confused about career direction",
+                  "Fresh graduates exploring startup opportunities",
+                  "Non-tech students interested in AI/startups",
+                  "People struggling to get interview calls",
+                  "Creators and freelancers exploring stable careers",
+                  "Anyone wanting clarity before choosing a path",
+                ].map((x) => (
+                  <li key={x} className="flex items-start gap-2"><Check className="w-4 h-4 mt-0.5 shrink-0" /> <span>{x}</span></li>
                 ))}
               </ul>
             </div>
@@ -123,7 +150,7 @@ export default function Webinar() {
               data-testid="webinar-form"
             >
               <p className="label-eyebrow mb-2">Reserve your spot</p>
-              <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-6">Free · Online · Live Q&A</h2>
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-6">Free • Live • Career Session</h2>
 
               <div className="space-y-4">
                 <div>
@@ -154,7 +181,7 @@ export default function Webinar() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="college" className="text-xs font-bold uppercase tracking-wider">College / Current Status</Label>
+                  <Label htmlFor="college" className="text-xs font-bold uppercase tracking-wider">Current Status / Background</Label>
                   <Input
                     id="college" data-testid="webinar-input-college"
                     value={form.college}
@@ -169,7 +196,7 @@ export default function Webinar() {
                       className="mt-2 rounded-none border-neutral-950 h-11 focus:ring-0 focus:ring-offset-0"
                       data-testid="webinar-select-role"
                     >
-                      <SelectValue placeholder="Select a role" />
+                      <SelectValue placeholder="Select your interested career path" />
                     </SelectTrigger>
                     <SelectContent className="rounded-none border-neutral-950">
                       {ROLES.map((r) => (
@@ -202,9 +229,9 @@ export default function Webinar() {
                 className="mt-6 w-full bg-neutral-950 text-white py-4 font-bold hover:bg-neutral-800 disabled:opacity-60"
                 data-testid="webinar-submit-btn"
               >
-                {submitting ? "Reserving…" : "Reserve My Spot"}
+                {submitting ? "Reserving…" : "Reserve My Free Spot"}
               </button>
-              <p className="mt-3 text-xs text-neutral-500">By registering you agree to our Terms & Privacy.</p>
+              <p className="mt-3 text-xs text-neutral-500">Limited seats for live interaction &amp; Q&amp;A</p>
             </form>
           </div>
         </div>
