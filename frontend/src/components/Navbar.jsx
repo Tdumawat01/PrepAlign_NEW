@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, X, MessageCircle } from "lucide-react";
+import { Menu, X, MessageCircle, ChevronDown, UserRound, LayoutDashboard, LogOut } from "lucide-react";
 import { WHATSAPP_URL } from "../lib/constants";
 import { useAuth } from "../context/AuthContext";
 
@@ -13,7 +13,23 @@ const navLinks = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onClick = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [userMenuOpen]);
+
+  const initials = (user?.name || user?.email || "U")
+    .split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0].toUpperCase()).join("");
 
   return (
     <header
@@ -65,13 +81,61 @@ export default function Navbar() {
             Reserve Your Free Spot
           </Link>
           {user ? (
-            <button
-              onClick={logout}
-              className="text-sm font-semibold text-neutral-500 hover:text-neutral-950 ml-2"
-              data-testid="nav-logout-btn"
-            >
-              Logout
-            </button>
+            <div className="relative ml-2" ref={userMenuRef}>
+              <button
+                onClick={() => setUserMenuOpen((v) => !v)}
+                className="inline-flex items-center gap-2 border border-neutral-200 hover:border-neutral-950 px-2.5 py-1.5 text-sm font-bold transition-colors"
+                data-testid="nav-user-menu-btn"
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+              >
+                <span className="w-6 h-6 bg-neutral-950 text-white text-[10px] font-black flex items-center justify-center">
+                  {initials}
+                </span>
+                <span className="hidden lg:inline max-w-[120px] truncate">
+                  {user.name?.split(" ")[0] || user.email}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              {userMenuOpen ? (
+                <div
+                  className="absolute right-0 mt-2 w-56 bg-white border-2 border-neutral-950 hard-shadow-sm py-1 z-50"
+                  data-testid="nav-user-menu"
+                  role="menu"
+                >
+                  <div className="px-4 py-2.5 border-b border-neutral-200">
+                    <p className="text-sm font-bold tracking-tight truncate">{user.name || "—"}</p>
+                    <p className="text-xs text-neutral-500 truncate">{user.email}</p>
+                  </div>
+                  <Link
+                    to="/profile"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold hover:bg-neutral-50"
+                    data-testid="nav-menu-profile"
+                    role="menuitem"
+                  >
+                    <UserRound className="w-4 h-4" /> Profile
+                  </Link>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold hover:bg-neutral-50"
+                    data-testid="nav-menu-dashboard"
+                    role="menuitem"
+                  >
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </Link>
+                  <button
+                    onClick={() => { setUserMenuOpen(false); logout(); }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950"
+                    data-testid="nav-menu-logout"
+                    role="menuitem"
+                  >
+                    <LogOut className="w-4 h-4" /> Logout
+                  </button>
+                </div>
+              ) : null}
+            </div>
           ) : (
             <Link
               to="/login"
@@ -108,14 +172,27 @@ export default function Navbar() {
                 {l.label}
               </NavLink>
             ))}
-            <Link
-              to={user ? "#" : "/login"}
-              onClick={() => { setOpen(false); if (user) logout(); }}
-              className="text-base font-semibold text-neutral-500"
-              data-testid="nav-mobile-auth"
-            >
-              {user ? "Logout" : "Sign in"}
-            </Link>
+            {user ? (
+              <>
+                <Link to="/profile" onClick={() => setOpen(false)} className="text-base font-semibold" data-testid="nav-mobile-profile">
+                  Profile
+                </Link>
+                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-base font-semibold" data-testid="nav-mobile-dashboard">
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => { setOpen(false); logout(); }}
+                  className="text-base font-semibold text-neutral-500 text-left"
+                  data-testid="nav-mobile-auth"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setOpen(false)} className="text-base font-semibold text-neutral-500" data-testid="nav-mobile-auth">
+                Sign in
+              </Link>
+            )}
           </div>
         </div>
       )}
