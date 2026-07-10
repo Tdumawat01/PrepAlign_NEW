@@ -19,7 +19,7 @@ import httpx
 
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = "openai/gpt-4o-mini"   # cheap + fast + universally available on OpenRouter
+MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 CACHE_TTL_DAYS = 30
 
 
