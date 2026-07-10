@@ -13,6 +13,7 @@ import httpx
 import asyncio
 
 from providers.serpapi_google_jobs import SerpApiGoogleJobsProvider
+from services.ai_insights import get_company_insights
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -339,6 +340,38 @@ async def refresh_jobs(request: Request):
     await db.jobs_meta.update_one({"_id": "state"}, {"$set": {"last_refreshed_at": None}}, upsert=True)
     count = await _refresh_jobs_cache()
     return {"ok": True, "count": count}
+
+
+class InsightsRequest(BaseModel):
+    provider: str
+    provider_job_id: str
+
+
+@api_router.post("/jobs/insights")
+async def job_insights(payload: InsightsRequest):
+    """Return AI-generated company insights for a specific cached job."""
+    job = await db.jobs.find_one(
+        {"provider": payload.provider, "provider_job_id": payload.provider_job_id},
+        {"_id": 0},
+    )
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found in cache")
+
+    company = job.get("company") or ""
+    title = job.get("title") or ""
+    location = job.get("location") or ""
+
+    # Prefer salary from the original SerpAPI extension if present
+    salary_hint = job.get("salary")
+
+    result = await get_company_insights(
+        db, company=company, title=title, location=location, salary_hint=salary_hint,
+    )
+    return {
+        "company": company,
+        "title": title,
+        **result,
+    }
 
 
 @api_router.get("/admin/stats")

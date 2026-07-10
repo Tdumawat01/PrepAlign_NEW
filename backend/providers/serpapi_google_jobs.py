@@ -91,6 +91,7 @@ class SerpApiGoogleJobsProvider(JobProvider):
                 employment_type = ext.get("schedule_type") or ext.get("employment_type")
                 posted_at_raw = ext.get("posted_at")
                 posted_at_dt = _parse_relative_date(posted_at_raw, now)
+                salary = ext.get("salary") or job.get("salary")
 
                 apply_options = job.get("apply_options") or []
                 apply_link = None
@@ -119,6 +120,7 @@ class SerpApiGoogleJobsProvider(JobProvider):
                     "logo_url": logo_url,
                     "location": location,
                     "employment_type": employment_type,
+                    "salary": salary,
                     "posted_at_raw": posted_at_raw,
                     "posted_at": posted_at_dt.isoformat() if posted_at_dt else None,
                     "apply_link": apply_link,

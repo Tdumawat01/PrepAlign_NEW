@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { Search, MapPin, Briefcase, Clock, ArrowUpRight, Building2, RefreshCw, Filter } from "lucide-react";
+import { Search, MapPin, Briefcase, Clock, ArrowUpRight, Building2, RefreshCw, Filter, Sparkles, IndianRupee, User, ChevronDown } from "lucide-react";
 import { API } from "../lib/constants";
 import { Reveal, Stagger, StaggerItem } from "../components/Reveal";
 
@@ -42,6 +42,27 @@ function CompanyLogo({ src, name }) {
 function JobCard({ job, index }) {
   const employment = job.employment_type || "Not specified";
   const location = job.location || "Location not specified";
+  const [insights, setInsights] = useState(null);
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+
+  const loadInsights = async () => {
+    if (insights) { setInsightsOpen((v) => !v); return; }
+    setInsightsLoading(true);
+    setInsightsOpen(true);
+    try {
+      const res = await axios.post(`${API}/jobs/insights`, {
+        provider: job.provider,
+        provider_job_id: job.provider_job_id,
+      }, { timeout: 45000 });
+      setInsights(res.data);
+    } catch {
+      setInsights({ error: true });
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
   return (
     <StaggerItem>
       <div className="card-lift border-t border-neutral-200 py-5 px-1 sm:px-2 hover:bg-neutral-50" data-testid={`job-card-${index}`}>
@@ -73,6 +94,11 @@ function JobCard({ job, index }) {
               <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {location}</span>
               <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> {employment}</span>
               <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {formatPostedAt(job.posted_at, job.posted_at_raw)}</span>
+              {job.salary ? (
+                <span className="flex items-center gap-1.5 text-neutral-950 font-semibold">
+                  <IndianRupee className="w-3.5 h-3.5" /> {job.salary}
+                </span>
+              ) : null}
               {job.is_remote ? <span className="flex items-center gap-1.5 text-neutral-950 font-semibold">• Remote</span> : null}
               {job.is_internship ? <span className="flex items-center gap-1.5 text-neutral-950 font-semibold">• Internship</span> : null}
             </div>
@@ -85,6 +111,60 @@ function JobCard({ job, index }) {
                 ))}
               </div>
             ) : null}
+
+            <button
+              type="button"
+              onClick={loadInsights}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-neutral-700 hover:text-neutral-950 transition-colors"
+              data-testid={`job-insights-btn-${index}`}
+              aria-expanded={insightsOpen}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              AI Insights
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${insightsOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {insightsOpen && (
+              <div className="mt-3 border-l-2 border-neutral-950 bg-neutral-50 p-4 text-sm" data-testid={`job-insights-${index}`}>
+                {insightsLoading ? (
+                  <p className="text-neutral-500 flex items-center gap-2">
+                    <span className="inline-block w-3.5 h-3.5 border-2 border-neutral-950 border-t-transparent rounded-full animate-spin" />
+                    Generating insights…
+                  </p>
+                ) : insights?.error ? (
+                  <p className="text-neutral-500">Couldn’t generate insights right now. Please try again later.</p>
+                ) : insights ? (
+                  <div className="space-y-3">
+                    {insights.preview ? (
+                      <div>
+                        <p className="label-eyebrow mb-1 flex items-center gap-1.5"><Building2 className="w-3 h-3" /> Company preview</p>
+                        <p className="text-neutral-800 leading-relaxed">{insights.preview}</p>
+                      </div>
+                    ) : null}
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {insights.salary_range_estimate ? (
+                        <div>
+                          <p className="label-eyebrow mb-1 flex items-center gap-1.5"><IndianRupee className="w-3 h-3" /> Salary range</p>
+                          <p className="text-neutral-800 font-bold">{insights.salary_range_estimate}</p>
+                        </div>
+                      ) : null}
+                      {insights.founder_name ? (
+                        <div>
+                          <p className="label-eyebrow mb-1 flex items-center gap-1.5"><User className="w-3 h-3" /> Founder</p>
+                          <p className="text-neutral-800 font-bold">{insights.founder_name}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                    {!insights.preview && !insights.salary_range_estimate && !insights.founder_name ? (
+                      <p className="text-neutral-500">Not enough public info about this company.</p>
+                    ) : null}
+                    <p className="text-[10px] text-neutral-400 pt-1">
+                      AI-generated using public information. Verify before making decisions.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
       </div>
