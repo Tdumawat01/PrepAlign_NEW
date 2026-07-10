@@ -10,6 +10,9 @@ from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 import httpx
+import asyncio
+
+from providers.serpapi_google_jobs import SerpApiGoogleJobsProvider
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -17,6 +20,26 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# ---- Jobs config ----
+JOB_QUERIES: List[str] = [
+    "Founder's Office",
+    "GTM Engineer",
+    "Product Management",
+    "Product Operations",
+    "Product Design",
+    "Brand & Content",
+    "Marketing",
+    "Community",
+    "Business Analyst",
+    "Data Analyst",
+    "AI Operations",
+    "Customer Success",
+    "Startup Internships",
+]
+JOB_CACHE_TTL_HOURS = 24
+_jobs_provider = SerpApiGoogleJobsProvider()
+_jobs_refresh_lock = asyncio.Lock()
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -209,6 +232,113 @@ async def list_mentorship_requests(request: Request):
     await require_admin(request)
     items = await db.mentorship_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(2000)
     return items
+
+
+# ---------- Jobs ----------
+
+async def _refresh_jobs_cache() -> int:
+    """Fetch fresh jobs from all providers and replace cache. Returns count."""
+    async with _jobs_refresh_lock:
+        # Double-check TTL under lock to avoid duplicate refreshes on stampede
+        meta = await db.jobs_meta.find_one({"_id": "state"}, {"_id": 0})
+        if meta and meta.get("last_refreshed_at"):
+            last = datetime.fromisoformat(meta["last_refreshed_at"])
+            if last.tzinfo is None:
+                last = last.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) - last < timedelta(hours=JOB_CACHE_TTL_HOURS):
+                # Fresh enough
+                return await db.jobs.count_documents({})
+
+        jobs = await _jobs_provider.fetch_jobs(JOB_QUERIES)
+
+        # Dedupe by (provider, provider_job_id) — merge query lists
+        merged: dict = {}
+        for j in jobs:
+            key = (j["provider"], j["provider_job_id"])
+            if key in merged:
+                existing = merged[key]
+                existing_queries = set(existing.get("queries") or [])
+                existing_queries.update(j.get("queries") or [])
+                existing["queries"] = sorted(existing_queries)
+            else:
+                merged[key] = j
+
+        docs = list(merged.values())
+
+        # Drop expired: posted_at older than 60 days
+        cutoff = datetime.now(timezone.utc) - timedelta(days=60)
+        def _keep(j):
+            pa = j.get("posted_at")
+            if not pa:
+                return True  # unknown date — keep
+            try:
+                dt = datetime.fromisoformat(pa)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt >= cutoff
+            except Exception:
+                return True
+        docs = [j for j in docs if _keep(j)]
+
+        # Replace cache atomically
+        await db.jobs.delete_many({})
+        if docs:
+            await db.jobs.insert_many(docs)
+
+        await db.jobs_meta.update_one(
+            {"_id": "state"},
+            {"$set": {
+                "last_refreshed_at": datetime.now(timezone.utc).isoformat(),
+                "count": len(docs),
+                "provider": _jobs_provider.provider_name,
+            }},
+            upsert=True,
+        )
+        return len(docs)
+
+
+async def _ensure_fresh_jobs():
+    """Cache-aside: trigger a refresh if empty or stale (>24h)."""
+    meta = await db.jobs_meta.find_one({"_id": "state"}, {"_id": 0})
+    count = await db.jobs.count_documents({})
+    stale = True
+    if meta and meta.get("last_refreshed_at"):
+        try:
+            last = datetime.fromisoformat(meta["last_refreshed_at"])
+            if last.tzinfo is None:
+                last = last.replace(tzinfo=timezone.utc)
+            stale = datetime.now(timezone.utc) - last >= timedelta(hours=JOB_CACHE_TTL_HOURS)
+        except Exception:
+            stale = True
+    if count == 0 or stale:
+        try:
+            await _refresh_jobs_cache()
+        except Exception as e:
+            # Don't fail the request if the provider is down — serve whatever we have
+            print(f"[jobs] refresh failed: {e}")
+
+
+@api_router.get("/jobs")
+async def list_jobs():
+    await _ensure_fresh_jobs()
+    items = await db.jobs.find({}, {"_id": 0}).to_list(1000)
+    meta = await db.jobs_meta.find_one({"_id": "state"}, {"_id": 0}) or {}
+    return {
+        "jobs": items,
+        "count": len(items),
+        "last_refreshed_at": meta.get("last_refreshed_at"),
+        "provider": meta.get("provider"),
+    }
+
+
+@api_router.post("/jobs/refresh")
+async def refresh_jobs(request: Request):
+    """Admin-only: force refresh regardless of TTL."""
+    await require_admin(request)
+    # Wipe last_refreshed_at to force refresh
+    await db.jobs_meta.update_one({"_id": "state"}, {"$set": {"last_refreshed_at": None}}, upsert=True)
+    count = await _refresh_jobs_cache()
+    return {"ok": True, "count": count}
 
 
 @api_router.get("/admin/stats")
