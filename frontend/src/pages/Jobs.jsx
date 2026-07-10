@@ -212,7 +212,7 @@ export default function Jobs() {
     return () => { alive = false; };
   }, []);
 
-  const jobs = data.jobs || [];
+  const jobs = useMemo(() => data.jobs || [], [data]);
 
   const roles = useMemo(() => {
     const s = new Set();
