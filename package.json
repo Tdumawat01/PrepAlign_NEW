@@ -1,0 +1,13 @@
+{
+  "name": "prepalign",
+  "private": true,
+  "description": "PrepAlign monorepo — Vercel builds the React app under frontend/",
+  "scripts": {
+    "install:frontend": "npm ci --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "build:frontend": "npm run build --prefix frontend"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
