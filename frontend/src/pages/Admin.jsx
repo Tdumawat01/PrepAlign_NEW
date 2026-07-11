@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { API } from "../lib/constants";
 import { useAuth } from "../context/AuthContext";
-import { Download, ShieldAlert, Users, Ticket, UserRoundSearch, TrendingUp, LogOut } from "lucide-react";
+import { Download, ShieldAlert, Users, Ticket, UserRoundSearch, TrendingUp, LogOut, RefreshCw } from "lucide-react";
 
 function StatCard({ label, value, sub, testid }) {
   return (
@@ -143,6 +143,7 @@ export default function Admin() {
   const [mentorships, setMentorships] = useState([]);
   const [fetching, setFetching] = useState(true);
   const [forbidden, setForbidden] = useState(false);
+  const [refreshingJobs, setRefreshingJobs] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -198,6 +199,21 @@ export default function Admin() {
     }
   };
 
+  const handleRefreshJobs = async () => {
+    if (refreshingJobs) return;
+    setRefreshingJobs(true);
+    const t = toast.loading("Refreshing job board — this can take up to a minute…");
+    try {
+      const res = await axios.post(`${API}/jobs/refresh`, {}, { withCredentials: true, timeout: 120000 });
+      toast.success(`Job board refreshed — ${res.data.count} openings cached.`, { id: t });
+    } catch (err) {
+      const msg = err?.response?.status === 403 ? "Admin access required." : "Refresh failed. Try again.";
+      toast.error(msg, { id: t });
+    } finally {
+      setRefreshingJobs(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-5 sm:px-8 py-10 md:py-14" data-testid="page-admin">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
@@ -209,6 +225,15 @@ export default function Admin() {
           <p className="mt-2 text-sm text-neutral-500">Signed in as {user.email}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleRefreshJobs}
+            disabled={refreshingJobs}
+            className="btn-press inline-flex items-center gap-2 border-2 border-neutral-950 px-4 py-2 font-bold text-sm hover:bg-neutral-950 hover:text-white disabled:opacity-60 disabled:cursor-not-allowed"
+            data-testid="admin-refresh-jobs"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshingJobs ? "animate-spin" : ""}`} />
+            {refreshingJobs ? "Refreshing…" : "Refresh Jobs"}
+          </button>
           <button
             onClick={handleExport}
             className="inline-flex items-center gap-2 border-2 border-neutral-950 px-4 py-2 font-bold text-sm hover:bg-neutral-950 hover:text-white"
