@@ -187,8 +187,10 @@ function Chip({ active, onClick, children, testid }) {
   );
 }
 
+const EMPTY_JOBS = [];
+
 export default function Jobs() {
-  const [data, setData] = useState({ jobs: [], last_refreshed_at: null });
+  const [data, setData] = useState({ jobs: EMPTY_JOBS, last_refreshed_at: null });
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [role, setRole] = useState("All");
@@ -202,9 +204,15 @@ export default function Jobs() {
       try {
         setLoading(true);
         const res = await axios.get(`${API}/jobs`, { timeout: 90000 });
-        if (alive) setData(res.data || { jobs: [] });
+        if (alive) {
+          const payload = res.data || {};
+          setData({
+            ...payload,
+            jobs: Array.isArray(payload.jobs) ? payload.jobs : EMPTY_JOBS,
+          });
+        }
       } catch {
-        if (alive) setData({ jobs: [] });
+        if (alive) setData({ jobs: EMPTY_JOBS });
       } finally {
         if (alive) setLoading(false);
       }
@@ -212,7 +220,7 @@ export default function Jobs() {
     return () => { alive = false; };
   }, []);
 
-  const jobs = useMemo(() => data.jobs || [], [data]);
+  const jobs = Array.isArray(data.jobs) ? data.jobs : EMPTY_JOBS;
 
   const roles = useMemo(() => {
     const s = new Set();
