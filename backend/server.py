@@ -14,6 +14,7 @@ import asyncio
 
 from providers.serpapi_google_jobs import SerpApiGoogleJobsProvider
 from services.ai_insights import get_company_insights
+from services.career_gps import assess as career_gps_assess
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -372,6 +373,33 @@ async def job_insights(payload: InsightsRequest):
         "title": title,
         **result,
     }
+
+
+# ---------- Career GPS ----------
+
+class CareerGPSAnswers(BaseModel):
+    profile: dict = Field(default_factory=dict)
+    interests: List[str] = Field(default_factory=list)
+    styles: List[str] = Field(default_factory=list)
+    skills: dict = Field(default_factory=dict)
+    goals: dict = Field(default_factory=dict)
+
+
+@api_router.post("/career-gps/assess")
+async def career_gps_endpoint(payload: CareerGPSAnswers, request: Request):
+    result = career_gps_assess(payload.model_dump())
+    # Persist assessment if user is signed in (optional)
+    user = await get_current_user(request)
+    doc = {
+        "id": str(uuid.uuid4()),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": user.get("user_id") if user else None,
+        "email": user.get("email") if user else None,
+        "answers": payload.model_dump(),
+        "result": result,
+    }
+    await db.career_gps_assessments.insert_one(doc)
+    return {"assessment_id": doc["id"], **result}
 
 
 @api_router.get("/admin/stats")

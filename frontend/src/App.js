@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Jobs from "./pages/Jobs";
+import CareerGPS from "./pages/CareerGPS";
 import AuthCallback from "./pages/AuthCallback";
 
 function AppRouter() {
@@ -37,6 +38,7 @@ function AppRouter() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/jobs" element={<Jobs />} />
+        <Route path="/career-gps" element={<CareerGPS />} />
         <Route path="*" element={<Home />} />
       </Routes>
     </Layout>
