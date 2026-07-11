@@ -1,6 +1,5 @@
 """SerpAPI Google Jobs provider."""
 from __future__ import annotations
-import os
 import re
 import asyncio
 from datetime import datetime, timezone, timedelta
@@ -9,6 +8,7 @@ import hashlib
 
 import serpapi
 
+from config import get_serpapi
 from . import JobProvider
 
 _REL_RE = re.compile(r"(\d+)\s+(minute|hour|day|week|month)s?\s+ago", re.I)
@@ -51,9 +51,10 @@ class SerpApiGoogleJobsProvider(JobProvider):
     provider_name = "serpapi_google_jobs"
 
     def __init__(self, api_key: Optional[str] = None, country: str = "in", location: str = "India"):
-        self.api_key = api_key or os.environ.get("SERPAPI_KEY", "")
-        self.country = country
-        self.location = location
+        cfg = get_serpapi()
+        self.api_key = api_key if api_key is not None else cfg.api_key
+        self.country = country or cfg.country
+        self.location = location or cfg.location
 
     def _search_sync(self, query: str) -> dict:
         client = serpapi.Client(api_key=self.api_key)

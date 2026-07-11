@@ -83,4 +83,8 @@ export const STEPS = [
 
 export const DRAFT_KEY = "prepalign_career_gps_draft_v1";
 export const RESULT_KEY = "prepalign_career_gps_result_v1";
+export const ANSWERS_KEY = "prepalign_career_gps_answers_v1";
+export const ROADMAP_CACHE_KEY = "prepalign_career_gps_ai_roadmap_v1";
 export const ROADMAP_PROGRESS_KEY = "prepalign_career_gps_roadmap_progress_v1";
+/** Local queue for phase-2 email / activation triggers (synced later via API). */
+export const ACTIVATION_QUEUE_KEY = "prepalign_career_gps_activation_queue_v1";

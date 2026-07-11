@@ -5,7 +5,6 @@ signature so we can later swap the internal scoring for an LLM-based
 approach without touching the API layer or frontend.
 """
 from __future__ import annotations
-import os
 import re
 import json
 import hashlib
@@ -13,6 +12,8 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 
 import httpx
+
+from config import get_openrouter, openrouter_headers
 
 
 # --------- Role profiles ---------
@@ -338,8 +339,6 @@ def assess(answers: dict) -> dict:
 # AI-personalized roadmap (OpenRouter)
 # =========================================================
 
-_OR_URL = "https://openrouter.ai/api/v1/chat/completions"
-_OR_MODEL = os.environ.get("OPENROUTER_ROADMAP_MODEL", "openai/gpt-4o-mini")
 _ROADMAP_CACHE_DAYS = 30
 
 
@@ -391,8 +390,8 @@ def _extract_json_block(text: str) -> Optional[dict]:
 
 
 async def _call_openrouter_for_roadmap(role: str, answers: dict) -> Optional[dict]:
-    api_key = os.environ.get("OPENROUTER_API_KEY", "")
-    if not api_key:
+    cfg = get_openrouter()
+    if not cfg.configured:
         return None
 
     prof = answers.get("profile") or {}
@@ -409,7 +408,7 @@ async def _call_openrouter_for_roadmap(role: str, answers: dict) -> Optional[dic
     )
 
     payload = {
-        "model": _OR_MODEL,
+        "model": cfg.roadmap_model,
         "messages": [
             {"role": "system", "content": _ROADMAP_SYSTEM},
             {"role": "user", "content": user_msg},
@@ -418,14 +417,12 @@ async def _call_openrouter_for_roadmap(role: str, answers: dict) -> Optional[dic
         "max_tokens": 1800,
         "response_format": {"type": "json_object"},
     }
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://prepalign.app",
-        "X-Title": "PrepAlign Career GPS",
-    }
     async with httpx.AsyncClient(timeout=45) as http:
-        r = await http.post(_OR_URL, json=payload, headers=headers)
+        r = await http.post(
+            cfg.base_url,
+            json=payload,
+            headers=openrouter_headers("Career GPS"),
+        )
     if r.status_code != 200:
         print(f"[career_gps] openrouter {r.status_code}: {r.text[:200]}")
         return None
@@ -486,7 +483,14 @@ async def generate_personalized_roadmap(db, role: str, answers: dict, force: boo
     roadmap = ai["weeks"]
     await db.career_gps_roadmaps.update_one(
         {"_id": key},
-        {"$set": {"role": role, "roadmap": roadmap, "fetched_at": now.isoformat(), "model": _OR_MODEL}},
+        {
+            "$set": {
+                "role": role,
+                "roadmap": roadmap,
+                "fetched_at": now.isoformat(),
+                "model": get_openrouter().roadmap_model,
+            }
+        },
         upsert=True,
     )
     return {"role": role, "roadmap": roadmap, "source": "openrouter"}

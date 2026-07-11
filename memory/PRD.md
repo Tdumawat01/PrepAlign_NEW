@@ -41,6 +41,7 @@ Build a clean, modern, mobile-first landing website for a startup focused on hel
 - P0: Replace WhatsApp placeholder link with real invite URL
 - P1: Admin dashboard UI to view registrations/mentorship requests (backend APIs ready)
 - P1: Email notification on form submit (Resend/SendGrid)
+- P1: Career GPS activation emails (phase 2) — flush `ACTIVATION_QUEUE_KEY` events via `/api/career-gps/activation`
 - P2: Rate-limit public POST endpoints (spam protection)
 - P2: Analytics (GA4/PostHog) + UTM capture on forms
 - P2: Add testimonials carousel & FAQ sections
@@ -50,3 +51,4 @@ Build a clean, modern, mobile-first landing website for a startup focused on hel
 1. User provides real WhatsApp invite URL → replace in `/app/frontend/src/lib/constants.js`
 2. Decide email provider for notifications and integrate
 3. Build admin dashboard (list views behind auth already exist)
+4. Career GPS roadmap page shipped (`/career-gps/roadmap`) — progress, heatmap, tasks/guides/videos; email activation next

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Sparkles, Check, RefreshCcw, Compass, Zap, Target, BookOpen, PlayCircle, ExternalLink, Calendar } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Check, RefreshCcw, Compass, Zap, Target, Calendar } from "lucide-react";
 import { API } from "../lib/constants";
-import { STEPS, DRAFT_KEY, RESULT_KEY, ROADMAP_PROGRESS_KEY } from "../data/career_gps_config";
-import { Reveal, Stagger, StaggerItem } from "../components/Reveal";
+import { STEPS, DRAFT_KEY, RESULT_KEY, ANSWERS_KEY, ROADMAP_CACHE_KEY } from "../data/career_gps_config";
+import { Reveal } from "../components/Reveal";
 
 const EMPTY_ANSWERS = {
   profile: { current_status: "", degree: "", graduation_year: "" },
@@ -162,81 +162,8 @@ function MatchBar({ percent }) {
   );
 }
 
-function RoadmapChecklist({ topRole, roadmap }) {
-  const key = `${ROADMAP_PROGRESS_KEY}::${topRole}`;
-  const [done, setDone] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch { return {}; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem(key, JSON.stringify(done)); } catch { /* noop */ }
-  }, [done, key]);
-
-  const total = roadmap.length;
-  const doneCount = Object.values(done).filter(Boolean).length;
-  const pct = total ? Math.round((doneCount / total) * 100) : 0;
-
-  return (
-    <div data-testid="career-gps-roadmap">
-      <div className="flex items-center justify-between mb-3">
-        <p className="label-eyebrow">Your 8-week roadmap · {topRole}</p>
-        <p className="text-sm font-bold" data-testid="roadmap-progress-percent">{pct}% complete</p>
-      </div>
-      <div className="h-2 w-full bg-neutral-100 mb-6">
-        <motion.div
-          className="h-2 bg-neutral-950"
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        />
-      </div>
-
-      <ol className="border-t border-l border-neutral-200">
-        {roadmap.map((r) => {
-          const isDone = !!done[r.week];
-          return (
-            <li key={r.week} className={`border-r border-b border-neutral-200 flex items-start gap-3 p-4 md:p-5 transition-colors ${isDone ? "bg-neutral-50" : ""}`}>
-              <button
-                type="button"
-                onClick={() => setDone((d) => ({ ...d, [r.week]: !d[r.week] }))}
-                aria-pressed={isDone}
-                className={`w-6 h-6 shrink-0 border-2 border-neutral-950 flex items-center justify-center transition-colors ${isDone ? "bg-neutral-950 text-white" : "bg-white text-transparent"}`}
-                data-testid={`roadmap-check-${r.week}`}
-              >
-                <Check className="w-3.5 h-3.5" strokeWidth={3} />
-              </button>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-neutral-500 mb-1">Week {r.week}</p>
-                <p className={`text-sm md:text-base font-semibold tracking-tight ${isDone ? "line-through text-neutral-400" : "text-neutral-950"}`}>
-                  {r.milestone}
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
-function Results({ result, answers, onReset }) {
+function Results({ result, onOpenRoadmap, onReset }) {
   const top = result.top_matches?.[0];
-  const [aiRoadmap, setAiRoadmap] = useState(null);
-  const [aiLoading, setAiLoading] = useState(false);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      setAiLoading(true);
-      try {
-        const res = await axios.post(`${API}/career-gps/roadmap`, {
-          role: result.top_role,
-          answers,
-        }, { timeout: 60000 });
-        if (alive) setAiRoadmap(res.data?.roadmap || null);
-      } catch { /* fallback stays */ }
-      finally { if (alive) setAiLoading(false); }
-    })();
-    return () => { alive = false; };
-  }, [result.top_role, answers]);
 
   return (
     <Reveal>
@@ -290,22 +217,37 @@ function Results({ result, answers, onReset }) {
           ))}
         </div>
 
-        {/* 1:1 Career Call — placed BEFORE roadmap for high visibility */}
-        <section className="mt-16 border-2 border-neutral-950 bg-neutral-950 text-white p-6 md:p-10 hard-shadow" data-testid="career-gps-1on1-cta">
+        <section className="mt-16 border-2 border-neutral-950 bg-neutral-950 text-white p-6 md:p-10 hard-shadow" data-testid="career-gps-roadmap-cta">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <p className="label-eyebrow text-neutral-500 mb-2">1:1 Career Journey</p>
+              <p className="label-eyebrow text-neutral-500 mb-2">Personalized plan</p>
               <h2 className="text-3xl md:text-4xl font-black tracking-tighter leading-[0.95]">
-                Turn this roadmap<br /> into a real career.
+                Open your 8-week roadmap
               </h2>
               <p className="mt-3 text-neutral-400 max-w-md text-sm md:text-base">
-                Book a 30-minute call with a PrepAlign mentor. Get feedback on your roadmap,
-                resume, and a personal action plan for the next 30 days.
+                Tasks, guides, videos, progress tracking, and an activity heatmap — built for {result.top_role}.
               </p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenRoadmap}
+              className="btn-press inline-flex items-center gap-2 bg-[#25D366] border-2 border-white text-black px-6 py-3.5 font-bold shrink-0"
+              data-testid="career-gps-open-roadmap"
+            >
+              Go to roadmap <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </section>
+
+        <section className="mt-8 border-2 border-neutral-950 p-6 md:p-8" data-testid="career-gps-1on1-cta">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <p className="label-eyebrow mb-2">1:1 Career Journey</p>
+              <h2 className="text-2xl font-black tracking-tighter">Turn this into a real career.</h2>
             </div>
             <Link
               to={`/mentorship?role=${encodeURIComponent(result.top_role)}&source=career-gps`}
-              className="btn-press inline-flex items-center gap-2 bg-[#25D366] border-2 border-white text-black px-6 py-3.5 font-bold shrink-0"
+              className="btn-press inline-flex items-center gap-2 bg-neutral-950 text-white px-6 py-3.5 font-bold shrink-0"
               data-testid="career-gps-book-1on1"
             >
               <Calendar className="w-4 h-4" /> Book a 1:1 Call
@@ -313,29 +255,13 @@ function Results({ result, answers, onReset }) {
           </div>
         </section>
 
-        <section className="mt-16">
-          <RoadmapChecklist
-            topRole={result.top_role}
-            roadmap={result.roadmap}
-            aiLoading={aiLoading}
-            aiRoadmap={aiRoadmap}
-          />
-        </section>
-
         <div className="mt-12 flex flex-wrap gap-3">
           <Link
             to="/jobs"
-            className="btn-press inline-flex items-center gap-2 bg-neutral-950 text-white px-6 py-3.5 font-bold hard-shadow"
+            className="btn-press inline-flex items-center gap-2 border-2 border-neutral-950 px-6 py-3.5 font-bold"
             data-testid="results-see-jobs"
           >
-            See live jobs for {result.top_role} <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            to={`/mentorship?role=${encodeURIComponent(result.top_role)}&source=career-gps`}
-            className="btn-press inline-flex items-center gap-2 border-2 border-neutral-950 px-6 py-3.5 font-bold"
-            data-testid="results-mentorship"
-          >
-            Talk to a mentor
+            See live jobs for {result.top_role}
           </Link>
           <button
             onClick={onReset}
@@ -352,6 +278,7 @@ function Results({ result, answers, onReset }) {
 
 // -------- Main page --------
 export default function CareerGPS() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(EMPTY_ANSWERS);
   const [phase, setPhase] = useState("wizard"); // wizard | analyzing | results
@@ -425,7 +352,11 @@ export default function CareerGPS() {
         new Promise((r) => setTimeout(r, 4000)),  // guarantee ≥4s analyzing screen
       ]);
       setResult(res.data);
-      try { localStorage.setItem(RESULT_KEY, JSON.stringify(res.data)); } catch { /* noop */ }
+      try {
+        localStorage.setItem(RESULT_KEY, JSON.stringify(res.data));
+        localStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
+        localStorage.removeItem(ROADMAP_CACHE_KEY);
+      } catch { /* noop */ }
       setPhase("results");
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -435,10 +366,19 @@ export default function CareerGPS() {
     }
   };
 
+  const openRoadmap = () => {
+    try {
+      localStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
+    } catch { /* noop */ }
+    navigate("/career-gps/roadmap");
+  };
+
   const resetAll = () => {
     try {
       localStorage.removeItem(DRAFT_KEY);
       localStorage.removeItem(RESULT_KEY);
+      localStorage.removeItem(ANSWERS_KEY);
+      localStorage.removeItem(ROADMAP_CACHE_KEY);
     } catch { /* noop */ }
     setAnswers(EMPTY_ANSWERS);
     setStep(0);
@@ -448,8 +388,13 @@ export default function CareerGPS() {
 
   // ---- Render ----
   if (phase === "analyzing") return <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8"><AnimatePresence><Analyzing /></AnimatePresence></div>;
-  if (phase === "results" && result) return <div className="mx-auto max-w-4xl px-5 sm:px-8 py-10 md:py-16"><Results result={result} answers={answers} onReset={resetAll} /></div>;
-
+  if (phase === "results" && result) {
+    return (
+      <div className="mx-auto max-w-4xl px-5 sm:px-8 py-10 md:py-16">
+        <Results result={result} onOpenRoadmap={openRoadmap} onReset={resetAll} />
+      </div>
+    );
+  }
   // Wizard
   return (
     <div className="mx-auto max-w-3xl px-5 sm:px-8 py-10 md:py-16" data-testid="page-career-gps">

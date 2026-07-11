@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Header
+from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -15,6 +16,7 @@ import asyncio
 from providers.serpapi_google_jobs import SerpApiGoogleJobsProvider
 from services.ai_insights import get_company_insights
 from services.career_gps import assess as career_gps_assess, generate_personalized_roadmap
+from config import integration_status
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -43,12 +45,24 @@ JOB_CACHE_TTL_HOURS = 24
 _jobs_provider = SerpApiGoogleJobsProvider()
 _jobs_refresh_lock = asyncio.Lock()
 
-app = FastAPI()
+app = FastAPI(title="PrepAlign API", docs_url="/docs", redoc_url="/redoc")
 api_router = APIRouter(prefix="/api")
+
+
+@app.get("/")
+async def root_redirect():
+    """Browser-friendly entry: API routes live under /api."""
+    return RedirectResponse(url="/docs")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
+_status = integration_status()
+logger.info(
+    "Integrations — openrouter=%s serpapi=%s mongo=%s",
+    _status["openrouter"],
+    _status["serpapi"],
+    _status["mongo"],
+)
 # --------------- Models ---------------
 
 class User(BaseModel):
@@ -130,6 +144,13 @@ async def require_admin(request: Request) -> dict:
 @api_router.get("/")
 async def root():
     return {"message": "PrepAlign API"}
+
+
+@api_router.get("/integrations/status")
+async def integrations_status():
+    """Whether external APIs are configured. Never returns secret values."""
+    return integration_status()
+
 
 # REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
 @api_router.post("/auth/session")

@@ -9,7 +9,6 @@ All calls are cached in MongoDB (`company_insights` collection) keyed by
 lowercased company name to avoid repeated LLM calls for the same company.
 """
 from __future__ import annotations
-import os
 import json
 import re
 from datetime import datetime, timezone, timedelta
@@ -17,9 +16,8 @@ from typing import Optional, Dict, Any
 
 import httpx
 
+from config import get_openrouter, openrouter_headers
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 CACHE_TTL_DAYS = 30
 
 
@@ -55,8 +53,8 @@ def _extract_json(text: str) -> Optional[dict]:
 
 
 async def _call_openrouter(company: str, title: str, location: Optional[str]) -> Optional[dict]:
-    api_key = os.environ.get("OPENROUTER_API_KEY", "")
-    if not api_key:
+    cfg = get_openrouter()
+    if not cfg.configured:
         return None
     user_msg = (
         f"Company: {company}\n"
@@ -65,7 +63,7 @@ async def _call_openrouter(company: str, title: str, location: Optional[str]) ->
         f"Return JSON per the schema."
     )
     payload = {
-        "model": MODEL,
+        "model": cfg.insights_model,
         "messages": [
             {"role": "system", "content": SYSTEM},
             {"role": "user", "content": user_msg},
@@ -74,14 +72,12 @@ async def _call_openrouter(company: str, title: str, location: Optional[str]) ->
         "max_tokens": 350,
         "response_format": {"type": "json_object"},
     }
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://prepalign.app",
-        "X-Title": "PrepAlign Jobs",
-    }
     async with httpx.AsyncClient(timeout=30) as http:
-        r = await http.post(OPENROUTER_URL, json=payload, headers=headers)
+        r = await http.post(
+            cfg.base_url,
+            json=payload,
+            headers=openrouter_headers("Jobs"),
+        )
     if r.status_code != 200:
         print(f"[openrouter] {r.status_code}: {r.text[:200]}")
         return None
@@ -142,7 +138,7 @@ async def get_company_insights(
         "salary_range_estimate": result.get("salary_range_estimate"),
         "founder_name": result.get("founder_name"),
         "fetched_at": now.isoformat(),
-        "model": MODEL,
+        "model": get_openrouter().insights_model,
     }
     await db.company_insights.update_one({"_id": key}, {"$set": doc}, upsert=True)
 
