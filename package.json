@@ -8,6 +8,6 @@
     "build:frontend": "npm run build --prefix frontend"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   }
 }
