@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { API } from "../lib/constants";
@@ -25,6 +26,15 @@ export default function Mentorship() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  // Pre-fill target_role when arriving from Career GPS
+  useEffect(() => {
+    const role = searchParams.get("role");
+    if (role) {
+      setForm((f) => f.target_role ? f : { ...f, target_role: role });
+    }
+  }, [searchParams]);
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 

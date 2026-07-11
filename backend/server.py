@@ -14,7 +14,7 @@ import asyncio
 
 from providers.serpapi_google_jobs import SerpApiGoogleJobsProvider
 from services.ai_insights import get_company_insights
-from services.career_gps import assess as career_gps_assess
+from services.career_gps import assess as career_gps_assess, generate_personalized_roadmap
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -400,6 +400,17 @@ async def career_gps_endpoint(payload: CareerGPSAnswers, request: Request):
     }
     await db.career_gps_assessments.insert_one(doc)
     return {"assessment_id": doc["id"], **result}
+
+
+class CareerGPSRoadmapRequest(BaseModel):
+    role: str
+    answers: CareerGPSAnswers
+
+
+@api_router.post("/career-gps/roadmap")
+async def career_gps_roadmap(payload: CareerGPSRoadmapRequest):
+    data = await generate_personalized_roadmap(db, payload.role, payload.answers.model_dump())
+    return data
 
 
 @api_router.get("/admin/stats")

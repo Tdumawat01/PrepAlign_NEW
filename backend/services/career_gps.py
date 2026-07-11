@@ -5,7 +5,14 @@ signature so we can later swap the internal scoring for an LLM-based
 approach without touching the API layer or frontend.
 """
 from __future__ import annotations
-from typing import Dict, List, Any
+import os
+import re
+import json
+import hashlib
+from datetime import datetime, timezone, timedelta
+from typing import Dict, List, Any, Optional
+
+import httpx
 
 
 # --------- Role profiles ---------
@@ -325,3 +332,161 @@ def assess(answers: dict) -> dict:
         "top_role": top_role,
         "roadmap": roadmap,
     }
+
+
+# =========================================================
+# AI-personalized roadmap (OpenRouter)
+# =========================================================
+
+_OR_URL = "https://openrouter.ai/api/v1/chat/completions"
+_OR_MODEL = os.environ.get("OPENROUTER_ROADMAP_MODEL", "openai/gpt-4o-mini")
+_ROADMAP_CACHE_DAYS = 30
+
+
+_ROADMAP_SYSTEM = (
+    "You are PrepAlign's expert career coach for Indian Tier-2/3 students breaking into AI & startup roles. "
+    "Given a target role and the user's profile, output a JSON object with a highly personalized 8-week roadmap.\n\n"
+    "STRICT SCHEMA:\n"
+    '{"weeks": [{"week": 1, "milestone": "...", "tasks": ["...", "..."], "articles": [{"title": "...", "url": "..."}], "videos": [{"title": "...", "url": "..."}]}, ...]}\n\n'
+    "Rules:\n"
+    "- Exactly 8 week objects.\n"
+    "- milestone: 1 sentence, action-oriented.\n"
+    "- tasks: 2–4 concrete bullet actions (imperative verbs; time-bounded).\n"
+    "- articles: 1–2 links. Prefer WELL-KNOWN, STABLE sources (First Round Review firstround.com, Lenny's Newsletter lennysnewsletter.com, Reforge reforge.com, YC yc.com, Notion Guides notion.com/guides, Nir Eyal nirandfar.com, Product Coalition medium.com/tag/product-management, HBR hbr.org, Ness Labs nesslabs.com). Do not invent obscure URLs.\n"
+    "- videos: 1–2 links. Prefer YouTube channel or topic search links that are safe: use https://www.youtube.com/results?search_query=<terms> if unsure of specific video URLs. You may also link YouTube channels (Y Combinator, Lenny's Podcast, Ness Wadia, GaryVee, Ali Abdaal, First Round Review, Sahil Bloom).\n"
+    "- Adapt language to the user's current status (student vs early-career).\n"
+    "- Keep it India-centric where useful (INR context, Indian startup examples).\n"
+    "- Progression: weeks 1–2 foundations, 3–4 skill building, 5–6 portfolio/proof of work, 7–8 outreach and application.\n"
+    "- Return ONLY valid JSON. No markdown fences, no commentary."
+)
+
+
+def _roadmap_cache_key(role: str, answers: dict) -> str:
+    """Hash by role + degree + status + top interests — one roadmap per profile shape."""
+    prof = answers.get("profile") or {}
+    interests = sorted(answers.get("interests") or [])[:5]
+    payload = json.dumps({
+        "role": role,
+        "degree": prof.get("degree"),
+        "status": prof.get("current_status"),
+        "interests": interests,
+    }, sort_keys=True)
+    return hashlib.sha1(payload.encode()).hexdigest()[:24]
+
+
+def _extract_json_block(text: str) -> Optional[dict]:
+    if not text:
+        return None
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip(), flags=re.I | re.M)
+    try:
+        return json.loads(text)
+    except Exception:
+        m = re.search(r"\{.*\}", text, flags=re.S)
+        if not m:
+            return None
+        try:
+            return json.loads(m.group(0))
+        except Exception:
+            return None
+
+
+async def _call_openrouter_for_roadmap(role: str, answers: dict) -> Optional[dict]:
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not api_key:
+        return None
+
+    prof = answers.get("profile") or {}
+    goals = answers.get("goals") or {}
+    user_msg = (
+        f"Target role: {role}\n"
+        f"Current status: {prof.get('current_status') or 'N/A'}\n"
+        f"Degree: {prof.get('degree') or 'N/A'}, Grad year: {prof.get('graduation_year') or 'N/A'}\n"
+        f"Interests: {', '.join(answers.get('interests') or []) or 'N/A'}\n"
+        f"Working styles: {', '.join(answers.get('styles') or []) or 'N/A'}\n"
+        f"Skill self-ratings (1–5): {json.dumps(answers.get('skills') or {})}\n"
+        f"Career goals: {json.dumps(goals)}\n"
+        "\nReturn the JSON now."
+    )
+
+    payload = {
+        "model": _OR_MODEL,
+        "messages": [
+            {"role": "system", "content": _ROADMAP_SYSTEM},
+            {"role": "user", "content": user_msg},
+        ],
+        "temperature": 0.4,
+        "max_tokens": 1800,
+        "response_format": {"type": "json_object"},
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://prepalign.app",
+        "X-Title": "PrepAlign Career GPS",
+    }
+    async with httpx.AsyncClient(timeout=45) as http:
+        r = await http.post(_OR_URL, json=payload, headers=headers)
+    if r.status_code != 200:
+        print(f"[career_gps] openrouter {r.status_code}: {r.text[:200]}")
+        return None
+    body = r.json()
+    try:
+        content = body["choices"][0]["message"]["content"]
+    except Exception:
+        return None
+    parsed = _extract_json_block(content)
+    if not parsed or "weeks" not in parsed:
+        return None
+    weeks = parsed.get("weeks") or []
+    if not isinstance(weeks, list) or len(weeks) == 0:
+        return None
+    # Normalize & clamp to 8 weeks
+    norm = []
+    for i, w in enumerate(weeks[:8]):
+        norm.append({
+            "week": w.get("week") or (i + 1),
+            "milestone": (w.get("milestone") or "").strip() or f"Week {i + 1} focus",
+            "tasks": [str(t).strip() for t in (w.get("tasks") or []) if str(t).strip()][:5],
+            "articles": [
+                {"title": str(a.get("title") or a.get("url") or "Article"), "url": str(a.get("url") or "").strip()}
+                for a in (w.get("articles") or []) if isinstance(a, dict) and a.get("url")
+            ][:3],
+            "videos": [
+                {"title": str(v.get("title") or v.get("url") or "Video"), "url": str(v.get("url") or "").strip()}
+                for v in (w.get("videos") or []) if isinstance(v, dict) and v.get("url")
+            ][:3],
+        })
+    return {"weeks": norm}
+
+
+async def generate_personalized_roadmap(db, role: str, answers: dict, force: bool = False) -> dict:
+    """Cache-aside AI-personalized roadmap. Falls back to static template if LLM unavailable."""
+    key = _roadmap_cache_key(role, answers)
+    now = datetime.now(timezone.utc)
+
+    if not force:
+        cached = await db.career_gps_roadmaps.find_one({"_id": key}, {"_id": 0})
+        if cached and cached.get("fetched_at"):
+            try:
+                dt = datetime.fromisoformat(cached["fetched_at"])
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                if now - dt < timedelta(days=_ROADMAP_CACHE_DAYS):
+                    return {"role": role, "roadmap": cached.get("roadmap") or [], "source": "cache"}
+            except Exception:
+                pass
+
+    ai = await _call_openrouter_for_roadmap(role, answers)
+    if not ai:
+        # Fallback to static template
+        weeks = ROADMAPS.get(role) or ROADMAPS["Founder's Office"]
+        roadmap = [{"week": i + 1, "milestone": w, "tasks": [], "articles": [], "videos": []} for i, w in enumerate(weeks)]
+        return {"role": role, "roadmap": roadmap, "source": "fallback"}
+
+    roadmap = ai["weeks"]
+    await db.career_gps_roadmaps.update_one(
+        {"_id": key},
+        {"$set": {"role": role, "roadmap": roadmap, "fetched_at": now.isoformat(), "model": _OR_MODEL}},
+        upsert=True,
+    )
+    return {"role": role, "roadmap": roadmap, "source": "openrouter"}

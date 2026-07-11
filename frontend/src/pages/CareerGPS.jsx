@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Sparkles, Check, RefreshCcw, Compass, Zap, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Check, RefreshCcw, Compass, Zap, Target, BookOpen, PlayCircle, ExternalLink, Calendar } from "lucide-react";
 import { API } from "../lib/constants";
 import { STEPS, DRAFT_KEY, RESULT_KEY, ROADMAP_PROGRESS_KEY } from "../data/career_gps_config";
 import { Reveal, Stagger, StaggerItem } from "../components/Reveal";
@@ -217,8 +217,27 @@ function RoadmapChecklist({ topRole, roadmap }) {
   );
 }
 
-function Results({ result, onReset }) {
+function Results({ result, answers, onReset }) {
   const top = result.top_matches?.[0];
+  const [aiRoadmap, setAiRoadmap] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setAiLoading(true);
+      try {
+        const res = await axios.post(`${API}/career-gps/roadmap`, {
+          role: result.top_role,
+          answers,
+        }, { timeout: 60000 });
+        if (alive) setAiRoadmap(res.data?.roadmap || null);
+      } catch { /* fallback stays */ }
+      finally { if (alive) setAiLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, [result.top_role, answers]);
+
   return (
     <Reveal>
       <div data-testid="career-gps-results">
@@ -271,8 +290,36 @@ function Results({ result, onReset }) {
           ))}
         </div>
 
+        {/* 1:1 Career Call — placed BEFORE roadmap for high visibility */}
+        <section className="mt-16 border-2 border-neutral-950 bg-neutral-950 text-white p-6 md:p-10 hard-shadow" data-testid="career-gps-1on1-cta">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <p className="label-eyebrow text-neutral-500 mb-2">1:1 Career Journey</p>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tighter leading-[0.95]">
+                Turn this roadmap<br /> into a real career.
+              </h2>
+              <p className="mt-3 text-neutral-400 max-w-md text-sm md:text-base">
+                Book a 30-minute call with a PrepAlign mentor. Get feedback on your roadmap,
+                resume, and a personal action plan for the next 30 days.
+              </p>
+            </div>
+            <Link
+              to={`/mentorship?role=${encodeURIComponent(result.top_role)}&source=career-gps`}
+              className="btn-press inline-flex items-center gap-2 bg-[#25D366] border-2 border-white text-black px-6 py-3.5 font-bold shrink-0"
+              data-testid="career-gps-book-1on1"
+            >
+              <Calendar className="w-4 h-4" /> Book a 1:1 Call
+            </Link>
+          </div>
+        </section>
+
         <section className="mt-16">
-          <RoadmapChecklist topRole={result.top_role} roadmap={result.roadmap} />
+          <RoadmapChecklist
+            topRole={result.top_role}
+            roadmap={result.roadmap}
+            aiLoading={aiLoading}
+            aiRoadmap={aiRoadmap}
+          />
         </section>
 
         <div className="mt-12 flex flex-wrap gap-3">
@@ -284,7 +331,7 @@ function Results({ result, onReset }) {
             See live jobs for {result.top_role} <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            to="/mentorship"
+            to={`/mentorship?role=${encodeURIComponent(result.top_role)}&source=career-gps`}
             className="btn-press inline-flex items-center gap-2 border-2 border-neutral-950 px-6 py-3.5 font-bold"
             data-testid="results-mentorship"
           >
@@ -401,7 +448,7 @@ export default function CareerGPS() {
 
   // ---- Render ----
   if (phase === "analyzing") return <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8"><AnimatePresence><Analyzing /></AnimatePresence></div>;
-  if (phase === "results" && result) return <div className="mx-auto max-w-4xl px-5 sm:px-8 py-10 md:py-16"><Results result={result} onReset={resetAll} /></div>;
+  if (phase === "results" && result) return <div className="mx-auto max-w-4xl px-5 sm:px-8 py-10 md:py-16"><Results result={result} answers={answers} onReset={resetAll} /></div>;
 
   // Wizard
   return (
