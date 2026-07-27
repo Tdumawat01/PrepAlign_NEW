@@ -7,12 +7,13 @@ import {
   Lock,
   Zap,
   Download,
+  Check,
 } from "lucide-react";
 import { BRAND } from "../lib/constants";
 import {
-  isReportUnlocked,
   unlockSampleReport,
   openSampleReport,
+  useWaitlistJoined,
 } from "../lib/sampleReport";
 import {
   submitWaitlist,
@@ -108,20 +109,19 @@ export default function Home() {
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
-  const [reportUnlocked, setReportUnlocked] = useState(false);
-
-  useEffect(() => {
-    setReportUnlocked(isReportUnlocked());
-  }, []);
+  const reportUnlocked = useWaitlistJoined();
 
   useEffect(() => {
     const hash = location.hash?.replace("#", "");
     if (hash) {
-      const t = setTimeout(() => scrollToId(hash), 80);
+      // Already joined: form is gone — send #waitlist to the confirmation / preview
+      const target =
+        reportUnlocked && hash === "waitlist" ? "intelligence-preview" : hash;
+      const t = setTimeout(() => scrollToId(target), 80);
       return () => clearTimeout(t);
     }
     return undefined;
-  }, [location.hash]);
+  }, [location.hash, reportUnlocked]);
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -142,7 +142,6 @@ export default function Home() {
     try {
       await submitWaitlist(form);
       unlockSampleReport();
-      setReportUnlocked(true);
       setForm(EMPTY_FORM);
       navigate("/waitlist/thanks", { replace: true });
     } catch (err) {
@@ -201,26 +200,53 @@ export default function Home() {
 
               <Reveal delay={0.16}>
                 <div className="mt-8 apple-cta-row">
-                  <Magnetic>
-                    <a
-                      href="#waitlist"
-                      onClick={(e) => { e.preventDefault(); scrollToId("waitlist"); }}
-                      className="apple-btn apple-btn-whatsapp"
-                      data-testid="hero-waitlist-btn"
-                    >
-                      Join the Waitlist <ArrowRight className="pa-icon" strokeWidth={1.75} />
-                    </a>
-                  </Magnetic>
-                  <Magnetic strength={0.18}>
-                    <a
-                      href="#intelligence-preview"
-                      onClick={(e) => { e.preventDefault(); scrollToId("intelligence-preview"); }}
-                      className="apple-btn apple-btn-dark"
-                      data-testid="hero-sample-btn"
-                    >
-                      See Sample Report
-                    </a>
-                  </Magnetic>
+                  {reportUnlocked ? (
+                    <>
+                      <Magnetic>
+                        <button
+                          type="button"
+                          onClick={handleDownloadReport}
+                          className="apple-btn apple-btn-whatsapp"
+                          data-testid="hero-download-report-btn"
+                        >
+                          <Download className="pa-icon" strokeWidth={1.75} /> Download Sample Report
+                        </button>
+                      </Magnetic>
+                      <Magnetic strength={0.18}>
+                        <a
+                          href="#intelligence-preview"
+                          onClick={(e) => { e.preventDefault(); scrollToId("intelligence-preview"); }}
+                          className="apple-btn apple-btn-dark"
+                          data-testid="hero-sample-btn"
+                        >
+                          Review sample intelligence
+                        </a>
+                      </Magnetic>
+                    </>
+                  ) : (
+                    <>
+                      <Magnetic>
+                        <a
+                          href="#waitlist"
+                          onClick={(e) => { e.preventDefault(); scrollToId("waitlist"); }}
+                          className="apple-btn apple-btn-whatsapp"
+                          data-testid="hero-waitlist-btn"
+                        >
+                          Join the Waitlist <ArrowRight className="pa-icon" strokeWidth={1.75} />
+                        </a>
+                      </Magnetic>
+                      <Magnetic strength={0.18}>
+                        <a
+                          href="#intelligence-preview"
+                          onClick={(e) => { e.preventDefault(); scrollToId("intelligence-preview"); }}
+                          className="apple-btn apple-btn-dark"
+                          data-testid="hero-sample-btn"
+                        >
+                          See Sample Report
+                        </a>
+                      </Magnetic>
+                    </>
+                  )}
                 </div>
               </Reveal>
 
@@ -249,7 +275,10 @@ export default function Home() {
       {/* ABOUT */}
       <AboutSection />
 
-      <EarlyAccessSection onJoinWaitlist={() => scrollToId("waitlist")} />
+      <EarlyAccessSection
+        joined={reportUnlocked}
+        onJoinWaitlist={() => scrollToId(reportUnlocked ? "intelligence-preview" : "waitlist")}
+      />
 
       {/* SAMPLE REPORT / dashboard preview */}
       <section id="intelligence-preview" className="apple-section bg-[var(--pa-ink)] text-[var(--pa-on-ink)] scroll-mt-16">
@@ -343,108 +372,152 @@ export default function Home() {
       <section id="waitlist" className="apple-section bg-[var(--pa-surface-2)] scroll-mt-16 relative overflow-hidden">
         <SectionGlow side="left" />
         <div className="apple-page relative">
-          <Reveal className="saas-section-head-center mb-10 sm:mb-12">
-            <p className="apple-eyebrow">Waitlist</p>
-            <h2 className="apple-headline">Join the Early Access Waitlist</h2>
-            <p className="apple-subhead apple-subhead-center">
-              Limited seats. Free for 30 days.
-              {!reportUnlocked && " Join to unlock the sample intelligence report."}
-            </p>
-          </Reveal>
-
-          <Reveal>
-            <form
-              onSubmit={handleSubmit}
-              className="apple-panel max-w-xl mx-auto space-y-5"
-              data-testid="waitlist-form"
-              noValidate
-            >
-              <div>
-                <Label className="apple-label">Full Name *</Label>
-                <Input data-testid="waitlist-input-name" value={form.full_name} onChange={(e) => update("full_name", e.target.value)} className={FIELD} autoComplete="name" />
-              </div>
-              <div>
-                <Label className="apple-label">Email *</Label>
-                <Input type="email" data-testid="waitlist-input-email" value={form.email} onChange={(e) => update("email", e.target.value)} className={FIELD} autoComplete="email" />
-              </div>
-              <div>
-                <Label className="apple-label">Phone Number *</Label>
-                <Input
-                  type="tel"
-                  inputMode="tel"
-                  placeholder="+919876543210"
-                  data-testid="waitlist-input-phone"
-                  value={form.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  onBlur={(e) => {
-                    const n = e.target.value.replace(/[^\d+]/g, "");
-                    if (n !== e.target.value) update("phone", n);
-                  }}
-                  className={FIELD}
-                  autoComplete="tel"
-                />
-                <p className="mt-2 pa-caption">
-                  Include country code, no spaces. Example: +919876543210
+          {reportUnlocked ? (
+            <>
+              <Reveal className="saas-section-head-center mb-10 sm:mb-12">
+                <p className="apple-eyebrow">You&apos;re on the list</p>
+                <h2 className="apple-headline">Thanks — you&apos;re all set</h2>
+                <p className="apple-subhead apple-subhead-center">
+                  We&apos;ll reach out within 24 hours. Meanwhile, review the sample intelligence and download your report.
                 </p>
-              </div>
-              <div>
-                <Label className="apple-label">
-                  LinkedIn <span className="font-normal text-[var(--pa-muted-2)]">(optional)</span>
-                </Label>
-                <Input type="url" placeholder="https://www.linkedin.com/in/…" data-testid="waitlist-input-linkedin" value={form.linkedin_url} onChange={(e) => update("linkedin_url", e.target.value)} className={FIELD} />
-              </div>
-              <div>
-                <Label className="apple-label">Current Role *</Label>
-                <Input data-testid="waitlist-input-current-role" value={form.current_role} onChange={(e) => update("current_role", e.target.value)} className={FIELD} />
-              </div>
-              <div>
-                <Label className="apple-label">Target Role *</Label>
-                <Select value={form.target_role} onValueChange={(v) => update("target_role", v)}>
-                  <SelectTrigger className={`${FIELD} focus:ring-0 focus:ring-offset-0`} data-testid="waitlist-select-target-role">
-                    <SelectValue placeholder="Select…" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-[var(--pa-r-lg)]">
-                    {TARGET_ROLES.map((r) => <SelectItem key={r} value={r} className="rounded-[var(--pa-r-md)]">{r}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="apple-label">Biggest Challenge *</Label>
-                <Select value={form.biggest_challenge} onValueChange={(v) => update("biggest_challenge", v)}>
-                  <SelectTrigger className={`${FIELD} focus:ring-0 focus:ring-offset-0`} data-testid="waitlist-select-challenge">
-                    <SelectValue placeholder="Select…" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-[var(--pa-r-lg)]">
-                    {CHALLENGES.map((c) => <SelectItem key={c} value={c} className="rounded-[var(--pa-r-md)]">{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="apple-label">
-                  Additional Comments <span className="font-normal text-[var(--pa-muted-2)]">(optional)</span>
-                </Label>
-                <Textarea
-                  rows={3}
-                  maxLength={2000}
-                  data-testid="waitlist-input-comments"
-                  value={form.comments}
-                  onChange={(e) => update("comments", e.target.value)}
-                  className="saas-input mt-2 !h-auto py-3 focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
-
-              <Magnetic strength={0.12} className="w-full pt-1">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="apple-btn apple-btn-dark w-full justify-center"
-                  data-testid="waitlist-submit-btn"
+              </Reveal>
+              <Reveal>
+                <div
+                  className="apple-panel max-w-xl mx-auto text-center space-y-6"
+                  data-testid="waitlist-joined-panel"
                 >
-                  {submitting ? "Submitting…" : "Get Early Access"}
-                </button>
-              </Magnetic>
-            </form>
-          </Reveal>
+                  <div className="pa-icon-wrap !w-14 !h-14 !bg-[var(--pa-green)] !text-[var(--pa-on-green)] mx-auto">
+                    <Check className="w-7 h-7" strokeWidth={2.5} />
+                  </div>
+                  <p className="saas-card-body !text-[var(--pa-ink)]">
+                    Your early access application is in. No need to fill the form again on this device.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      type="button"
+                      onClick={handleDownloadReport}
+                      className="apple-btn apple-btn-whatsapp w-full sm:w-auto justify-center"
+                      data-testid="waitlist-joined-download"
+                    >
+                      <Download className="pa-icon" strokeWidth={1.75} /> Download Sample Report
+                    </button>
+                    <a
+                      href="#intelligence-preview"
+                      onClick={(e) => { e.preventDefault(); scrollToId("intelligence-preview"); }}
+                      className="apple-btn apple-btn-dark w-full sm:w-auto justify-center"
+                      data-testid="waitlist-joined-review"
+                    >
+                      Review sample intelligence <ArrowRight className="pa-icon" strokeWidth={1.75} />
+                    </a>
+                  </div>
+                </div>
+              </Reveal>
+            </>
+          ) : (
+            <>
+              <Reveal className="saas-section-head-center mb-10 sm:mb-12">
+                <p className="apple-eyebrow">Waitlist</p>
+                <h2 className="apple-headline">Join the Early Access Waitlist</h2>
+                <p className="apple-subhead apple-subhead-center">
+                  Limited seats. Free for 30 days. Join to unlock the sample intelligence report.
+                </p>
+              </Reveal>
+
+              <Reveal>
+                <form
+                  onSubmit={handleSubmit}
+                  className="apple-panel max-w-xl mx-auto space-y-5"
+                  data-testid="waitlist-form"
+                  noValidate
+                >
+                  <div>
+                    <Label className="apple-label">Full Name *</Label>
+                    <Input data-testid="waitlist-input-name" value={form.full_name} onChange={(e) => update("full_name", e.target.value)} className={FIELD} autoComplete="name" />
+                  </div>
+                  <div>
+                    <Label className="apple-label">Email *</Label>
+                    <Input type="email" data-testid="waitlist-input-email" value={form.email} onChange={(e) => update("email", e.target.value)} className={FIELD} autoComplete="email" />
+                  </div>
+                  <div>
+                    <Label className="apple-label">Phone Number *</Label>
+                    <Input
+                      type="tel"
+                      inputMode="tel"
+                      placeholder="+919876543210"
+                      data-testid="waitlist-input-phone"
+                      value={form.phone}
+                      onChange={(e) => update("phone", e.target.value)}
+                      onBlur={(e) => {
+                        const n = e.target.value.replace(/[^\d+]/g, "");
+                        if (n !== e.target.value) update("phone", n);
+                      }}
+                      className={FIELD}
+                      autoComplete="tel"
+                    />
+                    <p className="mt-2 pa-caption">
+                      Include country code, no spaces. Example: +919876543210
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="apple-label">
+                      LinkedIn <span className="font-normal text-[var(--pa-muted-2)]">(optional)</span>
+                    </Label>
+                    <Input type="url" placeholder="https://www.linkedin.com/in/…" data-testid="waitlist-input-linkedin" value={form.linkedin_url} onChange={(e) => update("linkedin_url", e.target.value)} className={FIELD} />
+                  </div>
+                  <div>
+                    <Label className="apple-label">Current Role *</Label>
+                    <Input data-testid="waitlist-input-current-role" value={form.current_role} onChange={(e) => update("current_role", e.target.value)} className={FIELD} />
+                  </div>
+                  <div>
+                    <Label className="apple-label">Target Role *</Label>
+                    <Select value={form.target_role} onValueChange={(v) => update("target_role", v)}>
+                      <SelectTrigger className={`${FIELD} focus:ring-0 focus:ring-offset-0`} data-testid="waitlist-select-target-role">
+                        <SelectValue placeholder="Select…" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-[var(--pa-r-lg)]">
+                        {TARGET_ROLES.map((r) => <SelectItem key={r} value={r} className="rounded-[var(--pa-r-md)]">{r}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="apple-label">Biggest Challenge *</Label>
+                    <Select value={form.biggest_challenge} onValueChange={(v) => update("biggest_challenge", v)}>
+                      <SelectTrigger className={`${FIELD} focus:ring-0 focus:ring-offset-0`} data-testid="waitlist-select-challenge">
+                        <SelectValue placeholder="Select…" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-[var(--pa-r-lg)]">
+                        {CHALLENGES.map((c) => <SelectItem key={c} value={c} className="rounded-[var(--pa-r-md)]">{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="apple-label">
+                      Additional Comments <span className="font-normal text-[var(--pa-muted-2)]">(optional)</span>
+                    </Label>
+                    <Textarea
+                      rows={3}
+                      maxLength={2000}
+                      data-testid="waitlist-input-comments"
+                      value={form.comments}
+                      onChange={(e) => update("comments", e.target.value)}
+                      className="saas-input mt-2 !h-auto py-3 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                  </div>
+
+                  <Magnetic strength={0.12} className="w-full pt-1">
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="apple-btn apple-btn-dark w-full justify-center"
+                      data-testid="waitlist-submit-btn"
+                    >
+                      {submitting ? "Submitting…" : "Get Early Access"}
+                    </button>
+                  </Magnetic>
+                </form>
+              </Reveal>
+            </>
+          )}
         </div>
       </section>
 

@@ -1,28 +1,56 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Download, Check } from "lucide-react";
 import { handleSectionClick } from "../lib/scroll";
+import { useWaitlistJoined, openSampleReport } from "../lib/sampleReport";
 
 export default function Footer() {
+  const joined = useWaitlistJoined();
+
   return (
     <footer className="bg-[var(--pa-ink)] text-[var(--pa-on-ink)] border-t border-white/5" data-testid="site-footer">
       <div className="apple-page py-16 sm:py-20 md:py-24 text-center">
-        <p className="apple-eyebrow !text-[var(--pa-on-ink-faint)]">Early access</p>
+        <p className="apple-eyebrow !text-[var(--pa-on-ink-faint)]">
+          {joined ? "You're on the list" : "Early access"}
+        </p>
         <h2 className="apple-headline !text-[var(--pa-on-ink)] mt-4 max-w-xl mx-auto">
-          Free for the first 30 days.
+          {joined ? "Review your sample intelligence." : "Free for the first 30 days."}
         </h2>
         <p className="apple-subhead apple-subhead-center !text-[var(--pa-on-ink-muted)] mt-4">
-          Join the waitlist and be first to experience PrepAlign.
+          {joined
+            ? "We'll email you when your early access spot opens."
+            : "Join the waitlist and be first to experience PrepAlign."}
         </p>
-        <div className="mt-8 flex justify-center">
-          <a
-            href="/#waitlist"
-            onClick={(e) => handleSectionClick(e, "waitlist")}
-            className="apple-btn apple-btn-whatsapp w-full sm:w-auto max-w-sm"
-            data-testid="footer-waitlist-btn"
-          >
-            Join the Waitlist <ArrowUpRight className="pa-icon" strokeWidth={1.75} />
-          </a>
+        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+          {joined ? (
+            <>
+              <button
+                type="button"
+                onClick={openSampleReport}
+                className="apple-btn apple-btn-whatsapp w-full sm:w-auto max-w-sm"
+                data-testid="footer-download-report-btn"
+              >
+                <Download className="pa-icon" strokeWidth={1.75} /> Download Sample Report
+              </button>
+              <a
+                href="/#intelligence-preview"
+                onClick={(e) => handleSectionClick(e, "intelligence-preview")}
+                className="apple-btn apple-btn-ghost-dark w-full sm:w-auto max-w-sm"
+                data-testid="footer-review-btn"
+              >
+                <Check className="pa-icon" strokeWidth={1.75} /> Review preview
+              </a>
+            </>
+          ) : (
+            <a
+              href="/#waitlist"
+              onClick={(e) => handleSectionClick(e, "waitlist")}
+              className="apple-btn apple-btn-whatsapp w-full sm:w-auto max-w-sm"
+              data-testid="footer-waitlist-btn"
+            >
+              Join the Waitlist <ArrowUpRight className="pa-icon" strokeWidth={1.75} />
+            </a>
+          )}
         </div>
 
         <nav

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, ArrowRight } from "lucide-react";
+import { Menu, ArrowRight, Check } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useWaitlistJoined } from "../lib/sampleReport";
 import {
   Drawer,
   DrawerClose,
@@ -31,6 +32,16 @@ export default function Navbar() {
   const location = useLocation();
   const onHome = location.pathname === "/";
   const reduce = useReducedMotion();
+  const joined = useWaitlistJoined();
+
+  const ctaHref = onHome
+    ? joined
+      ? "#intelligence-preview"
+      : "#waitlist"
+    : joined
+      ? "/#intelligence-preview"
+      : "/#waitlist";
+  const ctaHash = joined ? "#intelligence-preview" : "#waitlist";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -144,16 +155,25 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           <a
-            href={onHome ? "#waitlist" : "/#waitlist"}
-            onClick={(e) => handleNav(e, "#waitlist")}
+            href={ctaHref}
+            onClick={(e) => handleNav(e, ctaHash)}
             className="group inline-flex items-center gap-1.5 rounded-full bg-pa-brand text-pa-on-brand pl-3.5 pr-3 py-1.5 text-[13px] font-semibold tracking-tight transition-[box-shadow,transform] duration-[var(--pa-duration)] ease-[var(--pa-ease)] hover:shadow-[var(--pa-shadow-brand)] hover:-translate-y-px active:translate-y-0"
             data-testid="nav-waitlist-btn"
           >
-            Join Waitlist
-            <ArrowRight
-              className="h-3.5 w-3.5 transition-transform duration-[var(--pa-duration)] group-hover:translate-x-0.5"
-              strokeWidth={2.25}
-            />
+            {joined ? (
+              <>
+                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                You&apos;re in
+              </>
+            ) : (
+              <>
+                Join Waitlist
+                <ArrowRight
+                  className="h-3.5 w-3.5 transition-transform duration-[var(--pa-duration)] group-hover:translate-x-0.5"
+                  strokeWidth={2.25}
+                />
+              </>
+            )}
           </a>
         </div>
 
@@ -195,12 +215,16 @@ export default function Navbar() {
               <div className="mt-4">
                 <DrawerClose asChild>
                   <a
-                    href={onHome ? "#waitlist" : "/#waitlist"}
-                    onClick={(e) => handleNav(e, "#waitlist")}
+                    href={ctaHref}
+                    onClick={(e) => handleNav(e, ctaHash)}
                     className="apple-btn apple-btn-whatsapp w-full justify-center"
                     data-testid="nav-mobile-waitlist"
                   >
-                    Join Waitlist <ArrowRight className="pa-icon" strokeWidth={1.75} />
+                    {joined ? (
+                      <>You&apos;re in — review sample <ArrowRight className="pa-icon" strokeWidth={1.75} /></>
+                    ) : (
+                      <>Join Waitlist <ArrowRight className="pa-icon" strokeWidth={1.75} /></>
+                    )}
                   </a>
                 </DrawerClose>
               </div>

@@ -1,5 +1,9 @@
-const WAITLIST_UNLOCK_KEY = "prepalign_waitlist_report_unlocked";
+import { useEffect, useState } from "react";
 
+const WAITLIST_UNLOCK_KEY = "prepalign_waitlist_report_unlocked";
+const WAITLIST_JOINED_EVENT = "prepalign:waitlist-joined";
+
+/** True after a successful waitlist join on this browser (UX gate only). */
 export function isReportUnlocked() {
   try {
     return localStorage.getItem(WAITLIST_UNLOCK_KEY) === "1";
@@ -8,12 +12,39 @@ export function isReportUnlocked() {
   }
 }
 
+export function hasJoinedWaitlist() {
+  return isReportUnlocked();
+}
+
 export function unlockSampleReport() {
   try {
     localStorage.setItem(WAITLIST_UNLOCK_KEY, "1");
   } catch {
     /* ignore quota / private mode */
   }
+  try {
+    window.dispatchEvent(new Event(WAITLIST_JOINED_EVENT));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Reactively track waitlist join / report unlock across Layout + Home. */
+export function useWaitlistJoined() {
+  const [joined, setJoined] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setJoined(isReportUnlocked());
+    sync();
+    window.addEventListener(WAITLIST_JOINED_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(WAITLIST_JOINED_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  return joined;
 }
 
 /** Public asset path — only trigger download after waitlist unlock. */

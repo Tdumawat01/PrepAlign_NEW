@@ -70,7 +70,7 @@ function ComingSoonBadge() {
   );
 }
 
-export default function EarlyAccessSection({ onJoinWaitlist }) {
+export default function EarlyAccessSection({ onJoinWaitlist, joined = false }) {
   return (
     <section id="early-access" className="apple-section bg-[var(--pa-surface)] scroll-mt-16 relative overflow-hidden">
       <SectionGlow side="left" />
@@ -142,7 +142,7 @@ export default function EarlyAccessSection({ onJoinWaitlist }) {
           <div className="mt-10 sm:mt-12">
             <Magnetic>
               <a
-                href="#waitlist"
+                href={joined ? "#intelligence-preview" : "#waitlist"}
                 onClick={(e) => {
                   e.preventDefault();
                   onJoinWaitlist?.();
@@ -150,7 +150,11 @@ export default function EarlyAccessSection({ onJoinWaitlist }) {
                 className="apple-btn apple-btn-dark w-full sm:w-auto"
                 data-testid="early-access-cta"
               >
-                Join the Early Access Waitlist <ArrowRight className="pa-icon" strokeWidth={1.75} />
+                {joined ? (
+                  <>Review sample intelligence <ArrowRight className="pa-icon" strokeWidth={1.75} /></>
+                ) : (
+                  <>Join the Early Access Waitlist <ArrowRight className="pa-icon" strokeWidth={1.75} /></>
+                )}
               </a>
             </Magnetic>
           </div>

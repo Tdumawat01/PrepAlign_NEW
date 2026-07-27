@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Check, ArrowRight, Download, Clock, Mail } from "lucide-react";
 import { Reveal } from "../components/Reveal";
-import { isReportUnlocked, openSampleReport } from "../lib/sampleReport";
+import { useWaitlistJoined, openSampleReport } from "../lib/sampleReport";
 
 const NEXT_STEPS = [
   {
@@ -18,11 +18,7 @@ const NEXT_STEPS = [
 ];
 
 export default function WaitlistThanks() {
-  const [reportUnlocked, setReportUnlocked] = useState(false);
-
-  useEffect(() => {
-    setReportUnlocked(isReportUnlocked());
-  }, []);
+  const reportUnlocked = useWaitlistJoined();
 
   return (
     <div data-testid="page-waitlist-thanks" className="bg-[var(--pa-surface)]">
@@ -70,7 +66,7 @@ export default function WaitlistThanks() {
               </button>
             )}
             <Link
-              to="/"
+              to="/#intelligence-preview"
               className="apple-btn apple-btn-dark w-full sm:w-auto"
               data-testid="thanks-home-btn"
             >

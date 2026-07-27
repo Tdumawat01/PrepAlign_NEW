@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { Reveal } from "./Reveal";
 import { handleSectionClick } from "../lib/scroll";
+import { useWaitlistJoined } from "../lib/sampleReport";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -98,6 +99,7 @@ function FaqItem({ item, index, open, onToggle, reduce }) {
 export default function FaqSection() {
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(0);
+  const joined = useWaitlistJoined();
 
   const onToggle = (index) => {
     setOpen((prev) => (prev === index ? -1 : index));
@@ -119,11 +121,15 @@ export default function FaqSection() {
               Everything you need to know about early access, pricing, and who PrepAlign is built for.
             </p>
             <a
-              href="/#waitlist"
-              onClick={(e) => handleSectionClick(e, "waitlist")}
+              href={joined ? "/#intelligence-preview" : "/#waitlist"}
+              onClick={(e) =>
+                handleSectionClick(e, joined ? "intelligence-preview" : "waitlist")
+              }
               className="mt-8 inline-flex text-sm font-semibold text-[var(--pa-green-deep)] hover:text-[var(--pa-ink)] transition-colors"
             >
-              Still unsure? Join the waitlist →
+              {joined
+                ? "Review sample intelligence →"
+                : "Still unsure? Join the waitlist →"}
             </a>
           </Reveal>
 
