@@ -1,203 +1,213 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { Menu, X, MessageCircle, ChevronDown, UserRound, LayoutDashboard, LogOut } from "lucide-react";
-import { WHATSAPP_URL } from "../lib/constants";
-import { useAuth } from "../context/AuthContext";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "./ui/drawer";
 
 const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/career-gps", label: "Career GPS" },
-  { to: "/webinar", label: "Webinar" },
-  { to: "/jobs", label: "Jobs" },
-  { to: "/mentorship", label: "Mentorship" },
-  { to: "/about", label: "About" },
+  { href: "#home", id: "home", label: "Home" },
+  { href: "#about", id: "about", label: "About" },
+  { href: "#early-access", id: "early-access", label: "Early Access" },
+  { href: "#faq", id: "faq", label: "FAQ" },
 ];
 
+function scrollToHash(hash) {
+  const id = hash.replace("#", "");
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
-  const { user, logout } = useAuth();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeId, setActiveId] = useState("home");
+  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const onHome = location.pathname === "/";
+  const reduce = useReducedMotion();
 
   useEffect(() => {
-    if (!userMenuOpen) return;
-    const onClick = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [userMenuOpen]);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  const initials = (user?.name || user?.email || "U")
-    .split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0].toUpperCase()).join("");
+  useEffect(() => {
+    if (!onHome) return undefined;
+
+    const ids = navLinks.map((l) => l.id);
+    const nodes = ids
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+
+    if (!nodes.length) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]?.target?.id) {
+          setActiveId(visible[0].target.id);
+        }
+      },
+      { rootMargin: "-20% 0px -55% 0px", threshold: [0.08, 0.2, 0.4] },
+    );
+
+    nodes.forEach((n) => observer.observe(n));
+    return () => observer.disconnect();
+  }, [onHome, location.hash]);
+
+  const handleNav = (e, href) => {
+    e.preventDefault();
+    setDrawerOpen(false);
+    const id = href.replace("#", "");
+    setActiveId(id);
+    if (onHome) {
+      scrollToHash(href);
+      window.history.replaceState(null, "", href);
+    } else {
+      window.location.href = `/${href}`;
+    }
+  };
 
   return (
     <header
-      className="sticky top-0 z-50 w-full bg-white border-b border-neutral-200"
+      className={`sticky top-0 z-50 w-full transition-[background,border-color,box-shadow] duration-[var(--pa-duration)] ease-[var(--pa-ease)] ${
+        scrolled
+          ? "bg-[rgba(238,244,240,0.9)] border-b border-[var(--pa-border)] shadow-[var(--pa-shadow-sm)] backdrop-blur-xl"
+          : "bg-[rgba(238,244,240,0.72)] border-b border-transparent backdrop-blur-lg"
+      }`}
       data-testid="main-navbar"
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2" data-testid="nav-logo">
-          <div className="w-7 h-7 bg-neutral-950 flex items-center justify-center">
-            <span className="text-white text-[11px] font-black tracking-tighter">PA</span>
-          </div>
-          <span className="font-black tracking-tight text-lg">PrepAlign</span>
+      <div className="apple-page h-14 flex items-center justify-between gap-3">
+        <Link
+          to="/"
+          className="flex items-center gap-2 min-w-0 shrink"
+          data-testid="nav-logo"
+          onClick={(e) => {
+            if (onHome) {
+              e.preventDefault();
+              scrollToHash("#home");
+              setActiveId("home");
+              window.history.replaceState(null, "", "#home");
+            }
+          }}
+        >
+          <span className="font-semibold tracking-tight text-[15px] text-[var(--pa-ink)] truncate">
+            PrepAlign
+          </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((l) => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              end={l.to === "/"}
-              className={({ isActive }) =>
-                `nav-underline text-sm font-semibold tracking-tight ${
-                  isActive ? "is-active text-neutral-950" : "text-neutral-500 hover:text-neutral-950"
-                }`
-              }
-              data-testid={`nav-link-${l.label.toLowerCase()}`}
-            >
-              {l.label}
-            </NavLink>
-          ))}
+        {/* Soft pill tray for desktop links */}
+        <nav
+          className="hidden md:flex items-center p-1 rounded-full border border-[var(--pa-border)] bg-[var(--pa-panel)]/70 shadow-[var(--pa-shadow-sm)]"
+          aria-label="Primary"
+        >
+          {navLinks.map((l) => {
+            const active = onHome && activeId === l.id;
+            return (
+              <a
+                key={l.href}
+                href={onHome ? l.href : `/${l.href}`}
+                onClick={(e) => handleNav(e, l.href)}
+                className={`relative px-3.5 lg:px-4 py-1.5 text-[13px] font-medium tracking-tight rounded-full transition-colors duration-[var(--pa-duration)] ${
+                  active
+                    ? "text-[var(--pa-ink)]"
+                    : "text-[var(--pa-muted)] hover:text-[var(--pa-ink-soft)]"
+                }`}
+                aria-current={active ? "true" : undefined}
+                data-testid={`nav-link-${l.label.toLowerCase().replace(/\s+/g, "-")}`}
+              >
+                {active && !reduce && (
+                  <motion.span
+                    layoutId="nav-active-pill"
+                    className="absolute inset-0 rounded-full bg-[var(--pa-surface-2)] border border-[var(--pa-border)]"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                {active && reduce && (
+                  <span className="absolute inset-0 rounded-full bg-[var(--pa-surface-2)] border border-[var(--pa-border)]" />
+                )}
+                <span className="relative z-[1]">{l.label}</span>
+              </a>
+            );
+          })}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-3">
           <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 border border-neutral-950 bg-white text-neutral-950 px-4 py-2 text-sm font-bold hover:bg-neutral-950 hover:text-white transition-colors"
-            data-testid="nav-whatsapp-btn"
+            href={onHome ? "#waitlist" : "/#waitlist"}
+            onClick={(e) => handleNav(e, "#waitlist")}
+            className="group inline-flex items-center gap-1.5 rounded-full bg-pa-brand text-pa-on-brand pl-3.5 pr-3 py-1.5 text-[13px] font-semibold tracking-tight transition-[box-shadow,transform] duration-[var(--pa-duration)] ease-[var(--pa-ease)] hover:shadow-[var(--pa-shadow-brand)] hover:-translate-y-px active:translate-y-0"
+            data-testid="nav-waitlist-btn"
           >
-            <MessageCircle className="w-4 h-4" />
-            WhatsApp
+            Join Waitlist
+            <ArrowRight
+              className="h-3.5 w-3.5 transition-transform duration-[var(--pa-duration)] group-hover:translate-x-0.5"
+              strokeWidth={2.25}
+            />
           </a>
-          <Link
-            to="/webinar"
-            className="inline-flex items-center bg-neutral-950 text-white px-4 py-2 text-sm font-bold hover:bg-neutral-800"
-            data-testid="nav-webinar-btn"
-          >
-            Reserve Your Free Spot
-          </Link>
-          {user ? (
-            <div className="relative ml-2" ref={userMenuRef}>
-              <button
-                onClick={() => setUserMenuOpen((v) => !v)}
-                className="inline-flex items-center gap-2 border border-neutral-200 hover:border-neutral-950 px-2.5 py-1.5 text-sm font-bold transition-colors"
-                data-testid="nav-user-menu-btn"
-                aria-haspopup="menu"
-                aria-expanded={userMenuOpen}
-              >
-                <span className="w-6 h-6 bg-neutral-950 text-white text-[10px] font-black flex items-center justify-center">
-                  {initials}
-                </span>
-                <span className="hidden lg:inline max-w-[120px] truncate">
-                  {user.name?.split(" ")[0] || user.email}
-                </span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-              {userMenuOpen ? (
-                <div
-                  className="absolute right-0 mt-2 w-56 bg-white border-2 border-neutral-950 hard-shadow-sm py-1 z-50"
-                  data-testid="nav-user-menu"
-                  role="menu"
-                >
-                  <div className="px-4 py-2.5 border-b border-neutral-200">
-                    <p className="text-sm font-bold tracking-tight truncate">{user.name || "—"}</p>
-                    <p className="text-xs text-neutral-500 truncate">{user.email}</p>
-                  </div>
-                  <Link
-                    to="/profile"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold hover:bg-neutral-50"
-                    data-testid="nav-menu-profile"
-                    role="menuitem"
-                  >
-                    <UserRound className="w-4 h-4" /> Profile
-                  </Link>
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold hover:bg-neutral-50"
-                    data-testid="nav-menu-dashboard"
-                    role="menuitem"
-                  >
-                    <LayoutDashboard className="w-4 h-4" /> Dashboard
-                  </Link>
-                  <button
-                    onClick={() => { setUserMenuOpen(false); logout(); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950"
-                    data-testid="nav-menu-logout"
-                    role="menuitem"
-                  >
-                    <LogOut className="w-4 h-4" /> Logout
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <Link
-              to="/login"
-              className="text-sm font-semibold text-neutral-500 hover:text-neutral-950 ml-2"
-              data-testid="nav-login-btn"
+        </div>
+
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerTrigger asChild>
+            <button
+              className="md:hidden p-2 -mr-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded-full border border-[var(--pa-border)] bg-[var(--pa-panel)]/80"
+              aria-label="Open menu"
+              data-testid="nav-mobile-toggle"
             >
-              Sign in
-            </Link>
-          )}
-        </div>
-
-        <button
-          className="md:hidden p-2"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Menu"
-          data-testid="nav-mobile-toggle"
-        >
-          {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+              <Menu className="pa-icon text-[var(--pa-ink)]" strokeWidth={1.75} />
+            </button>
+          </DrawerTrigger>
+          <DrawerContent className="md:hidden" data-testid="nav-mobile-menu">
+            <DrawerHeader>
+              <DrawerTitle className="text-left font-semibold tracking-tight text-[var(--pa-ink)]">
+                PrepAlign
+              </DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-8 flex flex-col gap-1">
+              {navLinks.map((l) => {
+                const active = onHome && activeId === l.id;
+                return (
+                  <DrawerClose asChild key={l.href}>
+                    <a
+                      href={onHome ? l.href : `/${l.href}`}
+                      onClick={(e) => handleNav(e, l.href)}
+                      className={`rounded-[var(--pa-r-lg)] px-3 py-3 text-base font-medium min-h-11 transition-colors ${
+                        active
+                          ? "bg-[var(--pa-surface-2)] text-[var(--pa-ink)] border border-[var(--pa-border)]"
+                          : "text-[var(--pa-ink)] hover:bg-[var(--pa-surface)]"
+                      }`}
+                    >
+                      {l.label}
+                    </a>
+                  </DrawerClose>
+                );
+              })}
+              <div className="mt-4">
+                <DrawerClose asChild>
+                  <a
+                    href={onHome ? "#waitlist" : "/#waitlist"}
+                    onClick={(e) => handleNav(e, "#waitlist")}
+                    className="apple-btn apple-btn-whatsapp w-full justify-center"
+                    data-testid="nav-mobile-waitlist"
+                  >
+                    Join Waitlist <ArrowRight className="pa-icon" strokeWidth={1.75} />
+                  </a>
+                </DrawerClose>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
       </div>
-
-      {open && (
-        <div className="md:hidden border-t border-neutral-200 bg-white" data-testid="nav-mobile-menu">
-          <div className="px-5 py-4 flex flex-col gap-4">
-            {navLinks.map((l) => (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.to === "/"}
-                onClick={() => setOpen(false)}
-                className="text-base font-semibold"
-                data-testid={`nav-mobile-link-${l.label.toLowerCase()}`}
-              >
-                {l.label}
-              </NavLink>
-            ))}
-            {user ? (
-              <>
-                <Link to="/profile" onClick={() => setOpen(false)} className="text-base font-semibold" data-testid="nav-mobile-profile">
-                  Profile
-                </Link>
-                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-base font-semibold" data-testid="nav-mobile-dashboard">
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => { setOpen(false); logout(); }}
-                  className="text-base font-semibold text-neutral-500 text-left"
-                  data-testid="nav-mobile-auth"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link to="/login" onClick={() => setOpen(false)} className="text-base font-semibold text-neutral-500" data-testid="nav-mobile-auth">
-                Sign in
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
     </header>
   );
 }

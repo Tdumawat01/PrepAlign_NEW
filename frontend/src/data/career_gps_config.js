@@ -30,7 +30,7 @@ export const STEPS = [
   {
     id: "interests",
     title: "Interests",
-    subtitle: "Pick every area that excites you — the more honest, the better.",
+    subtitle: "Pick every area that excites you. The more honest, the better.",
     questions: [
       {
         id: "interests",
@@ -58,7 +58,7 @@ export const STEPS = [
   {
     id: "skills",
     title: "Skills",
-    subtitle: "Rate yourself honestly — 1 (learning) to 5 (excellent).",
+    subtitle: "Rate yourself honestly from 1 (learning) to 5 (excellent).",
     questions: [
       { id: "Communication",   type: "rate", label: "Communication" },
       { id: "Problem Solving", type: "rate", label: "Problem Solving" },

@@ -61,6 +61,7 @@ def integration_status() -> dict:
         "serpapi": get_serpapi().configured,
         "mongo": bool(_env("MONGO_URL")),
         "db_name": bool(_env("DB_NAME")),
+        "waitlist_sheets": bool(_env("GOOGLE_APPS_SCRIPT_WAITLIST_URL")),
     }
 
 

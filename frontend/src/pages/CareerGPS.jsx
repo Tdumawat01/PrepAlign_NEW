@@ -30,7 +30,7 @@ function saveDraft(state) {
 // -------- Question atoms --------
 function RadioGroup({ value, onChange, options, testid }) {
   return (
-    <div className="grid sm:grid-cols-2 gap-2" data-testid={testid}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid={testid}>
       {options.map((opt) => {
         const active = value === opt;
         return (
@@ -38,13 +38,13 @@ function RadioGroup({ value, onChange, options, testid }) {
             key={opt}
             type="button"
             onClick={() => onChange(opt)}
-            className={`btn-press text-left px-4 py-3 border-2 text-sm font-semibold tracking-tight ${
-              active ? "bg-neutral-950 text-white border-neutral-950" : "bg-white text-neutral-950 border-neutral-300 hover:border-neutral-950"
+            className={`apple-chip w-full justify-start text-left px-4 py-3 rounded-2xl text-sm ${
+              active ? "apple-chip-active" : ""
             }`}
             data-testid={`${testid}-opt-${opt.replace(/\s+/g, "-").toLowerCase()}`}
           >
             <span className="inline-flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 border-2 ${active ? "border-white bg-white" : "border-neutral-400"}`} />
+              <span className={`w-2.5 h-2.5 rounded-full border ${active ? "border-white bg-white" : "border-neutral-400"}`} />
               {opt}
             </span>
           </button>
@@ -58,7 +58,7 @@ function SelectField({ value, onChange, options, testid }) {
     <select
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full h-11 border-2 border-neutral-950 rounded-none px-3 text-sm bg-white"
+      className="w-full h-11 rounded-xl border border-[#d2d2d7] px-3 text-sm bg-white focus:outline-none focus:border-neutral-950"
       data-testid={testid}
     >
       <option value="">Select…</option>
@@ -81,12 +81,10 @@ function MultiChips({ values, onChange, options, testid }) {
             key={opt}
             type="button"
             onClick={() => toggle(opt)}
-            className={`btn-press px-3.5 py-2 border-2 text-sm font-semibold ${
-              active ? "bg-neutral-950 text-white border-neutral-950" : "bg-white text-neutral-950 border-neutral-300 hover:border-neutral-950"
-            }`}
+            className={`apple-chip ${active ? "apple-chip-active" : ""}`}
             data-testid={`${testid}-opt-${opt.replace(/\s+/g, "-").toLowerCase()}`}
           >
-            {active ? <Check className="w-3.5 h-3.5 inline -mt-0.5 mr-1" /> : null}{opt}
+            {active ? <Check className="w-3.5 h-3.5" /> : null}{opt}
           </button>
         );
       })}
@@ -103,8 +101,8 @@ function Rating({ value, onChange, testid }) {
             key={n}
             type="button"
             onClick={() => onChange(n)}
-            className={`w-10 h-10 border-2 font-black text-sm transition-colors ${
-              active ? "bg-neutral-950 text-white border-neutral-950" : "bg-white text-neutral-500 border-neutral-300 hover:border-neutral-950"
+            className={`w-10 h-10 rounded-full text-sm font-semibold transition-colors ${
+              active ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-neutral-500 hover:bg-[#ececef]"
             }`}
             data-testid={`${testid}-${n}`}
           >
@@ -129,19 +127,19 @@ function Analyzing() {
       data-testid="career-gps-analyzing"
     >
       <div className="relative w-24 h-24 mb-8">
-        <div className="absolute inset-0 border-2 border-neutral-950" />
+        <div className="absolute inset-0 rounded-full border border-neutral-200" />
         <motion.div
-          className="absolute inset-0 border-2 border-[#25D366]"
+          className="absolute inset-0 rounded-full border-2 border-pa-brand"
           initial={{ scale: 1 }}
-          animate={{ scale: [1, 1.15, 1] }}
+          animate={{ scale: [1, 1.12, 1] }}
           transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <Compass className="w-9 h-9 text-neutral-950 animate-spin" style={{ animationDuration: "3s" }} />
         </div>
       </div>
-      <p className="label-eyebrow mb-3">Career GPS</p>
-      <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-center">Analyzing your Career GPS…</h2>
+      <p className="apple-eyebrow mb-3">Career GPS</p>
+      <h2 className="apple-headline text-center text-3xl md:text-4xl">Analyzing your Career GPS…</h2>
       <p className="mt-4 text-neutral-500 text-sm">Matching your signals across 10 modern roles.</p>
     </motion.div>
   );
@@ -150,9 +148,9 @@ function Analyzing() {
 // -------- Results screen --------
 function MatchBar({ percent }) {
   return (
-    <div className="w-full h-1.5 bg-neutral-100 relative">
+    <div className="apple-progress relative">
       <motion.div
-        className="absolute inset-y-0 left-0 bg-neutral-950"
+        className="absolute inset-y-0 left-0 bg-[#1d1d1f] rounded-full"
         initial={{ width: 0 }}
         whileInView={{ width: `${percent}%` }}
         viewport={{ once: true }}
@@ -168,48 +166,48 @@ function Results({ result, onOpenRoadmap, onReset }) {
   return (
     <Reveal>
       <div data-testid="career-gps-results">
-        <p className="label-eyebrow mb-3">Your Career GPS</p>
-        <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.95]">
+        <p className="apple-eyebrow mb-3">Your Career GPS</p>
+        <h1 className="apple-headline">
           You&apos;re built for<br />
-          <span className="inline-block mt-2 px-3 border-2 border-neutral-950 bg-[#25D366] text-black">
+          <span className="inline-block mt-2 px-3 py-1 rounded-full bg-pa-brand text-pa-on-brand text-[0.85em]">
             {top?.role || "a modern startup role"}
           </span>
         </h1>
-        <p className="mt-6 text-neutral-600 max-w-xl">
-          Based on your interests, working style, skills, and goals — here are the top 5 matches for you in 2026.
+        <p className="apple-subhead mt-6">
+          Based on your interests, working style, skills, and goals. Here are the top 5 matches for you in 2026.
         </p>
 
-        <div className="mt-10 border-t border-l border-neutral-200">
+        <div className="mt-10 space-y-4">
           {result.top_matches.map((m, i) => (
-            <div key={m.role} className="border-r border-b border-neutral-200 p-6 md:p-8" data-testid={`match-${i}`}>
+            <div key={m.role} className="apple-tile min-h-0 bg-[#f5f5f7]" data-testid={`match-${i}`}>
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <div>
-                  <p className="label-eyebrow">Match #{i + 1}</p>
-                  <h3 className="text-2xl md:text-3xl font-black tracking-tighter mt-1">{m.role}</h3>
+                  <p className="apple-eyebrow">Match #{i + 1}</p>
+                  <h3 className="text-2xl md:text-3xl font-semibold tracking-tight mt-1 text-[#1d1d1f]">{m.role}</h3>
                 </div>
                 <div className="text-right">
-                  <p className="text-4xl md:text-5xl font-black tracking-tighter">{m.match}%</p>
-                  <p className="label-eyebrow">match</p>
+                  <p className="text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f]">{m.match}%</p>
+                  <p className="apple-eyebrow">match</p>
                 </div>
               </div>
               <div className="mt-4"><MatchBar percent={m.match} /></div>
 
               <div className="mt-6 grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
-                  <p className="label-eyebrow mb-1.5 flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Why you&apos;re a fit</p>
+                  <p className="apple-eyebrow mb-1.5 flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Why you&apos;re a fit</p>
                   <p className="text-neutral-700 text-sm leading-relaxed">{m.why}</p>
                 </div>
                 <div>
-                  <p className="label-eyebrow mb-1.5">Average salary</p>
-                  <p className="text-neutral-950 font-bold">{m.salary}</p>
+                  <p className="apple-eyebrow mb-1.5">Average salary</p>
+                  <p className="text-[#1d1d1f] font-medium">{m.salary}</p>
                 </div>
               </div>
 
               <div className="mt-5">
-                <p className="label-eyebrow mb-2 flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Skills to learn</p>
+                <p className="apple-eyebrow mb-2 flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Skills to learn</p>
                 <div className="flex flex-wrap gap-2">
                   {m.skills_to_learn.map((s) => (
-                    <span key={s} className="text-xs font-bold px-2.5 py-1 border border-neutral-950 bg-white">{s}</span>
+                    <span key={s} className="apple-chip text-xs">{s}</span>
                   ))}
                 </div>
               </div>
@@ -217,21 +215,21 @@ function Results({ result, onOpenRoadmap, onReset }) {
           ))}
         </div>
 
-        <section className="mt-16 border-2 border-neutral-950 bg-neutral-950 text-white p-6 md:p-10 hard-shadow" data-testid="career-gps-roadmap-cta">
+        <section className="mt-16 rounded-3xl bg-[#1d1d1f] text-white p-6 md:p-10" data-testid="career-gps-roadmap-cta">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <p className="label-eyebrow text-neutral-500 mb-2">Personalized plan</p>
-              <h2 className="text-3xl md:text-4xl font-black tracking-tighter leading-[0.95]">
+              <p className="apple-eyebrow text-white/50 mb-2">Personalized plan</p>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight leading-[1.08]">
                 Open your 8-week roadmap
               </h2>
-              <p className="mt-3 text-neutral-400 max-w-md text-sm md:text-base">
-                Tasks, guides, videos, progress tracking, and an activity heatmap — built for {result.top_role}.
+              <p className="mt-3 text-white/60 max-w-md text-sm md:text-base">
+                Tasks, guides, videos, progress tracking, and an activity heatmap built for {result.top_role}.
               </p>
             </div>
             <button
               type="button"
               onClick={onOpenRoadmap}
-              className="btn-press inline-flex items-center gap-2 bg-[#25D366] border-2 border-white text-black px-6 py-3.5 font-bold shrink-0"
+              className="apple-btn apple-btn-whatsapp shrink-0"
               data-testid="career-gps-open-roadmap"
             >
               Go to roadmap <ArrowRight className="w-4 h-4" />
@@ -239,15 +237,15 @@ function Results({ result, onOpenRoadmap, onReset }) {
           </div>
         </section>
 
-        <section className="mt-8 border-2 border-neutral-950 p-6 md:p-8" data-testid="career-gps-1on1-cta">
+        <section className="mt-8 apple-panel" data-testid="career-gps-1on1-cta">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <p className="label-eyebrow mb-2">1:1 Career Journey</p>
-              <h2 className="text-2xl font-black tracking-tighter">Turn this into a real career.</h2>
+              <p className="apple-eyebrow mb-2">1:1 Career Journey</p>
+              <h2 className="text-2xl font-semibold tracking-tight text-[#1d1d1f]">Turn this into a real career.</h2>
             </div>
             <Link
               to={`/mentorship?role=${encodeURIComponent(result.top_role)}&source=career-gps`}
-              className="btn-press inline-flex items-center gap-2 bg-neutral-950 text-white px-6 py-3.5 font-bold shrink-0"
+              className="apple-btn apple-btn-dark shrink-0"
               data-testid="career-gps-book-1on1"
             >
               <Calendar className="w-4 h-4" /> Book a 1:1 Call
@@ -255,17 +253,17 @@ function Results({ result, onOpenRoadmap, onReset }) {
           </div>
         </section>
 
-        <div className="mt-12 flex flex-wrap gap-3">
+        <div className="mt-12 apple-cta-row">
           <Link
             to="/jobs"
-            className="btn-press inline-flex items-center gap-2 border-2 border-neutral-950 px-6 py-3.5 font-bold"
+            className="apple-btn border border-[#d2d2d7] bg-white text-[#1d1d1f]"
             data-testid="results-see-jobs"
           >
             See live jobs for {result.top_role}
           </Link>
           <button
             onClick={onReset}
-            className="inline-flex items-center gap-2 px-4 py-3.5 font-bold text-sm text-neutral-500 hover:text-neutral-950"
+            className="inline-flex items-center justify-center gap-2 px-4 py-3.5 font-medium text-sm text-neutral-500 hover:text-neutral-950 w-full sm:w-auto"
             data-testid="results-retake"
           >
             <RefreshCcw className="w-3.5 h-3.5" /> Retake assessment
@@ -387,34 +385,35 @@ export default function CareerGPS() {
   };
 
   // ---- Render ----
-  if (phase === "analyzing") return <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8"><AnimatePresence><Analyzing /></AnimatePresence></div>;
+  if (phase === "analyzing") return <div className="apple-page py-8"><AnimatePresence><Analyzing /></AnimatePresence></div>;
   if (phase === "results" && result) {
     return (
-      <div className="mx-auto max-w-4xl px-5 sm:px-8 py-10 md:py-16">
+      <div className="apple-page apple-page-y text-left">
         <Results result={result} onOpenRoadmap={openRoadmap} onReset={resetAll} />
       </div>
     );
   }
   // Wizard
   return (
-    <div className="mx-auto max-w-3xl px-5 sm:px-8 py-10 md:py-16" data-testid="page-career-gps">
+    <div className="apple-page apple-page-y text-left" data-testid="page-career-gps">
+      <div className="max-w-3xl">
       <div className="mb-8">
-        <p className="label-eyebrow mb-3 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Career GPS</p>
-        <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-[0.95]">
+        <p className="apple-eyebrow mb-3 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Career GPS</p>
+        <h1 className="apple-headline">
           Find your best-fit role in 60 seconds.
         </h1>
-        <p className="mt-4 text-neutral-600">15 questions across 5 sections. Autosaved — you can leave and come back.</p>
+        <p className="apple-subhead mt-4">15 questions across 5 sections. Autosaved, so you can leave and come back.</p>
       </div>
 
       {/* Progress bar */}
       <div className="mb-8" data-testid="career-gps-progress">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-bold tracking-tight">Step {step + 1} of {total} · {currentStep.title}</p>
-          <p className="text-xs font-bold">{progress}%</p>
+          <p className="text-xs font-medium tracking-tight text-neutral-600">Step {step + 1} of {total} · {currentStep.title}</p>
+          <p className="text-xs font-semibold">{progress}%</p>
         </div>
-        <div className="h-1.5 bg-neutral-100">
+        <div className="apple-progress">
           <motion.div
-            className="h-1.5 bg-neutral-950"
+            className="h-full bg-[#1d1d1f] rounded-full"
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           />
@@ -428,10 +427,10 @@ export default function CareerGPS() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className="border-2 border-neutral-950 bg-white p-6 md:p-10 hard-shadow"
+          className="apple-panel"
         >
-          <p className="label-eyebrow mb-1">Section {step + 1}</p>
-          <h2 className="text-2xl md:text-3xl font-black tracking-tight">{currentStep.title}</h2>
+          <p className="apple-eyebrow mb-1">Section {step + 1}</p>
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">{currentStep.title}</h2>
           <p className="mt-1 text-neutral-500 text-sm">{currentStep.subtitle}</p>
 
           <div className="mt-8 space-y-8">
@@ -478,12 +477,12 @@ export default function CareerGPS() {
         </motion.div>
       </AnimatePresence>
 
-      <div className="mt-8 flex items-center justify-between">
+      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={() => setStep((s) => Math.max(0, s - 1))}
           disabled={step === 0}
-          className="btn-press inline-flex items-center gap-2 px-4 py-3 font-bold text-sm border-2 border-neutral-950 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="apple-btn border border-[#d2d2d7] bg-white text-[#1d1d1f] text-sm disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto"
           data-testid="career-gps-prev"
         >
           <ArrowLeft className="w-4 h-4" /> Previous
@@ -493,7 +492,7 @@ export default function CareerGPS() {
             type="button"
             onClick={() => setStep((s) => Math.min(total - 1, s + 1))}
             disabled={!canProceed}
-            className="btn-press inline-flex items-center gap-2 bg-neutral-950 text-white px-5 py-3 font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            className="apple-btn apple-btn-dark text-sm disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto"
             data-testid="career-gps-next"
           >
             Next <ArrowRight className="w-4 h-4" />
@@ -503,12 +502,13 @@ export default function CareerGPS() {
             type="button"
             onClick={handleSubmit}
             disabled={!canProceed || submitting}
-            className="btn-press inline-flex items-center gap-2 bg-[#25D366] border-2 border-neutral-950 text-black px-5 py-3 font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            className="apple-btn apple-btn-whatsapp text-sm disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto"
             data-testid="career-gps-submit"
           >
             <Sparkles className="w-4 h-4" /> Get my Career GPS
           </button>
         )}
+      </div>
       </div>
     </div>
   );

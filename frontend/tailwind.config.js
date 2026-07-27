@@ -8,11 +8,33 @@ module.exports = {
   theme: {
   	extend: {
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			lg: 'var(--pa-r-lg)',
+  			md: 'var(--pa-r-md)',
+  			sm: 'var(--pa-r-sm)',
+  			xl: 'var(--pa-r-xl)',
+  			full: 'var(--pa-r-full)',
   		},
   		colors: {
+  			pa: {
+  				ink: 'rgb(15 23 42 / <alpha-value>)',
+  				'soft-ink': 'rgb(30 41 59 / <alpha-value>)',
+  				muted: 'rgb(71 85 105 / <alpha-value>)',
+  				surface: 'rgb(248 250 252 / <alpha-value>)',
+  				'surface-2': 'rgb(241 245 249 / <alpha-value>)',
+  				panel: 'rgb(255 255 255 / <alpha-value>)',
+  				brand: 'rgb(79 70 229 / <alpha-value>)',
+  				'brand-deep': 'rgb(67 56 202 / <alpha-value>)',
+  				interactive: 'rgb(59 130 246 / <alpha-value>)',
+  				highlight: 'rgb(124 58 237 / <alpha-value>)',
+  				success: 'rgb(22 163 74 / <alpha-value>)',
+  				warning: 'rgb(217 119 6 / <alpha-value>)',
+  				error: 'rgb(220 38 38 / <alpha-value>)',
+  				green: 'rgb(79 70 229 / <alpha-value>)',
+  				'green-deep': 'rgb(67 56 202 / <alpha-value>)',
+  				'on-green': 'rgb(255 255 255 / <alpha-value>)',
+  				'on-brand': 'rgb(255 255 255 / <alpha-value>)',
+  				'on-ink': 'rgb(248 250 252 / <alpha-value>)',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -53,6 +75,12 @@ module.exports = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			}
+  		},
+  		transitionTimingFunction: {
+  			pa: 'var(--pa-ease)',
+  		},
+  		transitionDuration: {
+  			pa: '220ms',
   		},
   		keyframes: {
   			'accordion-down': {

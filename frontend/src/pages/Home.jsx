@@ -1,167 +1,313 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { ArrowUpRight, MessageCircle, Ticket, Users, Mic2, Share2, FileText, Check } from "lucide-react";
-import { WHATSAPP_URL } from "../lib/constants";
-import { Reveal, Stagger, StaggerItem } from "../components/Reveal";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  ArrowRight,
+  Sparkles,
+  Lock,
+  Zap,
+  Download,
+} from "lucide-react";
+import { BRAND } from "../lib/constants";
+import {
+  isReportUnlocked,
+  unlockSampleReport,
+  openSampleReport,
+} from "../lib/sampleReport";
+import {
+  submitWaitlist,
+  getWaitlistErrorMessage,
+} from "../services/waitlist";
+import { Reveal, Stagger, StaggerItem, Magnetic } from "../components/Reveal";
+import HeroShowcase from "../components/HeroShowcase";
+import LivePulse from "../components/LivePulse";
+import TextCycle from "../components/TextCycle";
 import AnimatedNumber from "../components/AnimatedNumber";
+import { SectionGlow } from "../components/SectionMotion";
+import EarlyAccessSection from "../components/EarlyAccessSection";
+import ProblemSection from "../components/ProblemSection";
+import AboutSection from "../components/AboutSection";
+import FaqSection from "../components/FaqSection";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "../components/ui/select";
 
-const heroImg =
-  "https://images.unsplash.com/photo-1675664534136-51375fb40129?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjBjb2xsZWdlJTIwc3R1ZGVudHMlMjBsYXB0b3B8ZW58MHx8fHwxNzc3NzE3ODMxfDA&ixlib=rb-4.1.0&q=85";
-const meetupImg =
-  "https://images.unsplash.com/photo-1559223607-b4d0555ae227?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwbWVldHVwJTIwY3Jvd2R8ZW58MHx8fHwxNzc3NzE3ODMxfDA&ixlib=rb-4.1.0&q=85";
-
-const problems = [
-  "Applying to jobs but getting no replies",
-  "No strong LinkedIn or portfolio",
-  "Don’t know how to network",
-  "Struggle with communication",
+const HERO_OUTCOMES = [
+  "daily signals.",
+  "clear next steps.",
+  "ranked opportunities.",
 ];
 
-const pillars = [
-  { icon: Mic2,    title: "Communication", body: "Speak, write, and pitch yourself with clarity — the #1 filter recruiters use." },
-  { icon: Users,   title: "Networking",    body: "Warm intros, referrals, and DM scripts that actually get replies." },
-  { icon: Share2,  title: "Build in Public", body: "Ship, post, iterate. Make your work visible to the right people." },
-  { icon: FileText, title: "Portfolio",    body: "Proof-of-work projects that replace a fancy college tag on your resume." },
+const FIELD =
+  "saas-input mt-2 focus-visible:ring-0 focus-visible:ring-offset-0";
+
+const PREVIEW_CARDS = [
+  { label: "Today's Best Company", value: "Apply to Nimbus Labs", meta: "Series B, AI Ops hiring surge", score: "96" },
+  { label: "Opportunity Score", value: "96 / 100", meta: "Top 4% match for your profile", score: null },
+  { label: "Recommended Proof-of-Work", value: "Build a GTM signal dashboard", meta: "3 to 5 day project, high ROI", score: null },
+  { label: "Hidden Hiring Signal", value: "Looking for ops + AI fluency", meta: "Not listed in the JD", score: null },
+  { label: "Top Skill This Week", value: "Claude + spreadsheet workflows", meta: "Cited in 18 similar roles", score: null },
+  { label: "Resume Update", value: "Add 'AI-assisted research'", meta: "Keyword gap vs. peers", score: null },
+  { label: "Highest ROI Action Today", value: "Warm intro to hiring manager", meta: "Predicted reply rate +2.4x", score: null },
 ];
+
+const WHY_EARLY = [
+  { icon: Zap, title: "Shape the product", body: "Your feedback directly influences what PrepAlign ships first." },
+  { icon: Lock, title: "Free for 30 days", body: "Full early-access intelligence at no cost while we refine the experience." },
+  { icon: Sparkles, title: "Exclusive reports", body: "Weekly market briefs and personalized signals before public launch." },
+];
+
+const TARGET_ROLES = [
+  "Founder's Office",
+  "Product",
+  "Product Operations",
+  "GTM / Growth",
+  "GTM Engineering",
+  "AI Operations",
+  "Strategy / BizOps",
+  "Customer Success",
+  "Marketing",
+  "Sales",
+  "Other",
+];
+
+const CHALLENGES = [
+  "Finding relevant jobs",
+  "Getting interview calls",
+  "Resume",
+  "Networking",
+  "Cold outreach",
+  "Interview preparation",
+  "Career clarity",
+  "Building projects",
+  "Standing out from other applicants",
+  "Other",
+];
+
+const EMPTY_FORM = {
+  full_name: "",
+  email: "",
+  phone: "",
+  linkedin_url: "",
+  current_role: "",
+  target_role: "",
+  biggest_challenge: "",
+  comments: "",
+};
+
+function scrollToId(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 export default function Home() {
-  return (
-    <div data-testid="page-home">
-      {/* HERO */}
-      <section className="border-b border-neutral-200">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-16 md:pt-24 pb-12 md:pb-20 grid md:grid-cols-12 gap-10 items-end">
-          <div className="md:col-span-8 reveal reveal-1">
-            <p className="label-eyebrow mb-5">For Tier 2 & Tier 3 India</p>
-            <h1 className="text-5xl sm:text-6xl lg:text-[88px] font-black tracking-[-0.04em] leading-[0.9]">
-              Get Your First<br />
-              AI or Startup<br />
-              Job
-              <span className="inline-block ml-3 px-3 align-middle border-2 border-neutral-950 bg-[#25D366] text-black text-3xl md:text-4xl font-black tracking-tight">
-                without coding
-              </span>
-            </h1>
-            <p className="mt-7 text-lg md:text-xl text-neutral-600 max-w-2xl leading-relaxed">
-              No coding. No IIT/NIT. Just the skills that actually get you hired.
-            </p>
-            <p className="mt-3 text-sm md:text-base text-neutral-500 max-w-2xl">
-              Built to help students get real outcomes, not just learn.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link
-                to="/webinar"
-                className="inline-flex items-center gap-2 bg-neutral-950 text-white px-7 py-4 font-bold hard-shadow"
-                data-testid="hero-webinar-btn"
-              >
-                <Ticket className="w-5 h-5" /> Reserve Your Free Spot
-              </Link>
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-[#25D366] text-black px-7 py-4 font-bold border-2 border-neutral-950"
-                data-testid="hero-whatsapp-btn"
-              >
-                <MessageCircle className="w-5 h-5" /> Join WhatsApp Community
-              </a>
-            </div>
-            <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6 text-xs text-neutral-500">
-              <span>Limited seats for live interaction</span>
-              <span className="hidden sm:inline text-neutral-300">·</span>
-              <span>Get updates and resources directly on WhatsApp</span>
-            </div>
-            <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-neutral-500">
-              <span className="flex items-center gap-2"><Check className="w-4 h-4 text-neutral-950" /> 100% Free</span>
-              <span className="flex items-center gap-2"><Check className="w-4 h-4 text-neutral-950" /> Live Q&A</span>
-              <span className="flex items-center gap-2"><Check className="w-4 h-4 text-neutral-950" /> No coding required</span>
-            </div>
-          </div>
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [submitting, setSubmitting] = useState(false);
+  const [reportUnlocked, setReportUnlocked] = useState(false);
 
-          <div className="md:col-span-4 reveal reveal-2">
-            <div className="relative">
-              <div className="img-zoom border-2 border-neutral-950">
-                <img
-                  src={heroImg}
-                  alt="Student"
-                  className="w-full h-[360px] md:h-[460px] object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-white border-2 border-neutral-950 px-4 py-3 hard-shadow-sm">
-                <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-neutral-500">Cohort</p>
-                <p className="text-2xl font-black tracking-tight">
-                  <AnimatedNumber value={5000} suffix="+" testid="cohort-badge-number" />
-                </p>
-              </div>
-            </div>
-          </div>
+  useEffect(() => {
+    setReportUnlocked(isReportUnlocked());
+  }, []);
+
+  useEffect(() => {
+    const hash = location.hash?.replace("#", "");
+    if (hash) {
+      const t = setTimeout(() => scrollToId(hash), 80);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [location.hash]);
+
+  const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const handleDownloadReport = () => {
+    if (!reportUnlocked) {
+      toast.message("Join the waitlist first", {
+        description: "Unlock the sample intelligence report after you sign up.",
+      });
+      scrollToId("waitlist");
+      return;
+    }
+    openSampleReport();
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await submitWaitlist(form);
+      unlockSampleReport();
+      setReportUnlocked(true);
+      setForm(EMPTY_FORM);
+      navigate("/waitlist/thanks", { replace: true });
+    } catch (err) {
+      toast.error(getWaitlistErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div data-testid="page-home" className="bg-[var(--pa-surface)] text-[var(--pa-ink)]">
+      {/* HERO */}
+      <section
+        id="home"
+        className="relative min-h-[min(88vh,880px)] flex flex-col justify-center overflow-x-clip overflow-y-visible bg-[var(--pa-surface-2)] scroll-mt-16"
+      >
+        <div className="hero-mesh" aria-hidden>
+          <div className="hero-mesh-blob hero-mesh-a" />
+          <div className="hero-mesh-blob hero-mesh-b" />
+          <div className="hero-mesh-blob hero-mesh-c" />
         </div>
 
-        <div className="divider-strip">
-          <span>No IIT · No NIT · No Coding · No Problem</span>
-          <span>·</span>
-          <span>Communication Wins</span>
-          <span>·</span>
-          <span>Build in Public</span>
-          <span>·</span>
-          <span>Get Referred</span>
-          <span>·</span>
-          <span>Ship Weekly</span>
+        <div className="relative z-10 apple-page py-16 sm:py-20 md:py-24 lg:py-28">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div className="min-w-0">
+              <Reveal>
+                <span className="saas-badge">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--pa-green)]" />
+                  Early access · Free for 30 days
+                </span>
+              </Reveal>
+
+              <Reveal delay={0.04}>
+                <p className="pa-hero-title mt-6">{BRAND.name}</p>
+              </Reveal>
+
+              <Reveal delay={0.08}>
+                <h1 className="pa-display mt-4 max-w-[22ch]">
+                  Stop applying blindly.
+                  <br />
+                  <span className="text-[var(--pa-ink)]">Start applying with </span>
+                  <TextCycle
+                    words={HERO_OUTCOMES}
+                    intervalMs={2800}
+                    className="text-[var(--pa-green-deep)]"
+                    data-testid="hero-text-cycle"
+                  />
+                </h1>
+              </Reveal>
+
+              <Reveal delay={0.12}>
+                <p className="apple-subhead mt-6">
+                  Personalized career intelligence. PrepAlign reads hiring signals every day so you know exactly what to do next.
+                </p>
+              </Reveal>
+
+              <Reveal delay={0.16}>
+                <div className="mt-8 apple-cta-row">
+                  <Magnetic>
+                    <a
+                      href="#waitlist"
+                      onClick={(e) => { e.preventDefault(); scrollToId("waitlist"); }}
+                      className="apple-btn apple-btn-whatsapp"
+                      data-testid="hero-waitlist-btn"
+                    >
+                      Join the Waitlist <ArrowRight className="pa-icon" strokeWidth={1.75} />
+                    </a>
+                  </Magnetic>
+                  <Magnetic strength={0.18}>
+                    <a
+                      href="#intelligence-preview"
+                      onClick={(e) => { e.preventDefault(); scrollToId("intelligence-preview"); }}
+                      className="apple-btn apple-btn-dark"
+                      data-testid="hero-sample-btn"
+                    >
+                      See Sample Report
+                    </a>
+                  </Magnetic>
+                </div>
+              </Reveal>
+
+              <Reveal delay={0.2}>
+                <ul className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-6 sm:gap-y-2 pa-caption font-medium list-none p-0 m-0">
+                  {["Daily hiring signals", "Ranked next actions", "Founding member access"].map((item) => (
+                    <li key={item} className="inline-flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--pa-green)] shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            </div>
+
+            <div className="min-w-0">
+              <HeroShowcase />
+            </div>
+          </div>
         </div>
       </section>
 
       {/* PROBLEM */}
-      <section className="mx-auto max-w-7xl px-5 sm:px-8 py-20 md:py-28 grid md:grid-cols-12 gap-10">
-        <div className="md:col-span-5">
-          <p className="label-eyebrow mb-4">The Reality</p>
-          <h2 className="text-4xl sm:text-5xl font-black tracking-tighter leading-[0.95]">
-            Why you’re<br /> not getting<br /> interviews.
-          </h2>
-          <p className="mt-6 text-neutral-600 max-w-md">
-            You’re not lazy. You’re not unqualified. You’re invisible. Recruiters can’t find
-            proof that you’re worth a shot.
-          </p>
-        </div>
-        <Stagger className="md:col-span-7 grid sm:grid-cols-2 gap-0 border-t border-l border-neutral-200" stagger={0.06}>
-          {problems.map((p, i) => (
-            <StaggerItem
-              key={i}
-              className="card-lift border-r border-b border-neutral-200 p-8 flex items-start gap-4 hover:bg-neutral-50"
-            >
-              <span className="text-4xl font-black tracking-tighter text-neutral-300">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <p className="text-lg font-semibold tracking-tight leading-snug" data-testid={`problem-card-${i}`}>{p}</p>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
+      <ProblemSection />
 
-      {/* SOLUTION */}
-      <section className="bg-neutral-950 text-white">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-20 md:py-28">
-          <div className="grid md:grid-cols-12 gap-10 items-end mb-14">
-            <div className="md:col-span-7">
-              <p className="label-eyebrow text-neutral-500 mb-4">The Fix</p>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-[0.95]">
-                We help you get <span className="italic font-serif">noticed</span> —<br />
-                not just skilled.
-              </h2>
+      {/* ABOUT */}
+      <AboutSection />
+
+      <EarlyAccessSection onJoinWaitlist={() => scrollToId("waitlist")} />
+
+      {/* SAMPLE REPORT / dashboard preview */}
+      <section id="intelligence-preview" className="apple-section bg-[var(--pa-ink)] text-[var(--pa-on-ink)] scroll-mt-16">
+        <div className="apple-page">
+          <Reveal className="saas-section-head max-w-xl">
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+              <p className="apple-eyebrow !text-[var(--pa-green)]">Example intelligence</p>
+              <LivePulse label="Sample feed" className="text-[var(--pa-on-ink-faint)]" />
             </div>
-            <p className="md:col-span-5 text-neutral-400 leading-relaxed">
-              Skills are table stakes. Visibility, storytelling, and network get you the job.
-              Here are the 4 pillars we drill you on.
+            <h2 className="apple-headline !text-[var(--pa-on-ink)]">Sample intelligence report</h2>
+            <p className="apple-subhead !text-[var(--pa-on-ink-muted)]">
+              A glimpse of the daily signals PrepAlign surfaces: ranked, personalized, actionable.
             </p>
-          </div>
 
-          <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0 border-t border-l border-neutral-800" stagger={0.08}>
-            {pillars.map(({ icon: Icon, title, body }, i) => (
-              <StaggerItem
-                key={title}
-                className="card-lift border-r border-b border-neutral-800 p-8 hover:bg-neutral-900"
-              >
-                <div data-testid={`pillar-card-${i}`}>
-                  <Icon className="w-7 h-7 mb-6" strokeWidth={1.5} />
-                  <p className="text-2xl font-black tracking-tight mb-2">{title}</p>
-                  <p className="text-sm text-neutral-400 leading-relaxed">{body}</p>
+            <div className="mt-8">
+              {reportUnlocked ? (
+                <Magnetic>
+                  <button
+                    type="button"
+                    onClick={handleDownloadReport}
+                    className="apple-btn apple-btn-whatsapp w-full sm:w-auto"
+                    data-testid="download-sample-report"
+                  >
+                    <Download className="pa-icon" strokeWidth={1.75} /> Download Sample Report
+                  </button>
+                </Magnetic>
+              ) : (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <button
+                    type="button"
+                    onClick={handleDownloadReport}
+                    className="apple-btn apple-btn-ghost-dark w-full sm:w-auto"
+                    data-testid="download-sample-report-locked"
+                  >
+                    <Lock className="pa-icon" strokeWidth={1.75} /> Download Sample Report
+                  </button>
+                  <p className="pa-caption !text-[var(--pa-on-ink-faint)]">
+                    Unlocks after you join the waitlist.
+                  </p>
+                </div>
+              )}
+            </div>
+          </Reveal>
+
+          <Stagger className="pa-grid pa-grid-3 mt-10 sm:mt-12" stagger={0.05}>
+            {PREVIEW_CARDS.map((card) => (
+              <StaggerItem key={card.label} className="h-full">
+                <div className="saas-card-dark">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="saas-card-label">{card.label}</p>
+                    {card.score ? (
+                      <span className="pa-chip-score">
+                        <AnimatedNumber value={Number(card.score)} duration={1.35} />
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="saas-card-value">{card.value}</p>
+                  <p className="saas-card-meta">{card.meta}</p>
                 </div>
               </StaggerItem>
             ))}
@@ -169,80 +315,141 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SOCIAL PROOF */}
-      <section className="mx-auto max-w-7xl px-5 sm:px-8 py-20 md:py-28">
-        <div className="grid md:grid-cols-12 gap-10 items-center">
-          <Reveal className="md:col-span-5">
-            <div className="img-zoom border-2 border-neutral-950">
-              <img
-                src={meetupImg}
-                alt="Meetup"
-                className="w-full h-[320px] md:h-[420px] object-cover"
-              />
-            </div>
+      {/* WHY EARLY */}
+      <section id="why-early" className="apple-section bg-[var(--pa-surface)] scroll-mt-16 relative overflow-hidden">
+        <SectionGlow side="right" />
+        <div className="apple-page relative">
+          <Reveal className="saas-section-head-center">
+            <p className="apple-eyebrow">Why join early?</p>
+            <h2 className="apple-headline">Be first. Get free access. Shape what we build.</h2>
           </Reveal>
-          <div className="md:col-span-7">
-            <p className="label-eyebrow mb-4">Proof</p>
-            <h2 className="text-4xl sm:text-5xl font-black tracking-tighter leading-[0.95] mb-4">
-              A movement, not a course.
-            </h2>
-            <p className="text-neutral-600 mb-10 max-w-xl">
-              This is not a course. You’ll actually execute.
-            </p>
-            <Stagger className="grid grid-cols-3 gap-0 border-t border-l border-neutral-200" stagger={0.12}>
-              {[
-                { n: 5000, suf: "+", l: "Learners impacted" },
-                { n: 35,   suf: "+", l: "Offline meetups" },
-                { n: 15,   suf: "+", l: "Company collaborations" },
-              ].map((s, i) => (
-                <StaggerItem key={i} className="card-lift border-r border-b border-neutral-200 p-6 md:p-8 hover:bg-neutral-50">
-                  <p className="text-3xl md:text-5xl font-black tracking-tighter" data-testid={`stat-${i}`}>
-                    <AnimatedNumber value={s.n} suffix={s.suf} testid={`stat-num-${i}`} />
-                  </p>
-                  <p className="text-xs font-bold tracking-[0.18em] uppercase text-neutral-500 mt-2">{s.l}</p>
-                </StaggerItem>
-              ))}
-            </Stagger>
-            <p className="mt-6 text-sm text-neutral-500">
-              1,000+ students already learning and applying these strategies.
-            </p>
-          </div>
+          <Stagger className="pa-grid pa-grid-3 mt-10 sm:mt-12" stagger={0.07}>
+            {WHY_EARLY.map(({ icon: Icon, title, body }) => (
+              <StaggerItem key={title} className="h-full">
+                <div className="saas-card">
+                  <div className="pa-icon-wrap mb-4">
+                    <Icon className="pa-icon" strokeWidth={1.75} />
+                  </div>
+                  <h3 className="pa-title">{title}</h3>
+                  <p className="saas-card-body">{body}</p>
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="border-t border-neutral-200">
-        <Reveal className="mx-auto max-w-7xl px-5 sm:px-8 py-20 md:py-28 text-center">
-          <p className="label-eyebrow mb-5">Start</p>
-          <h2 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-[0.95]">
-            Start your journey.
-          </h2>
-          <p className="mt-5 text-neutral-600 max-w-xl mx-auto">
-            Free, fast, and built for students who refuse to wait for permission.
-          </p>
-          <div className="mt-10 flex flex-wrap gap-3 justify-center">
-            <Link
-              to="/webinar"
-              className="btn-press inline-flex items-center gap-2 bg-neutral-950 text-white px-8 py-4 font-bold hard-shadow"
-              data-testid="final-webinar-btn"
+      {/* WAITLIST */}
+      <section id="waitlist" className="apple-section bg-[var(--pa-surface-2)] scroll-mt-16 relative overflow-hidden">
+        <SectionGlow side="left" />
+        <div className="apple-page relative">
+          <Reveal className="saas-section-head-center mb-10 sm:mb-12">
+            <p className="apple-eyebrow">Waitlist</p>
+            <h2 className="apple-headline">Join the Early Access Waitlist</h2>
+            <p className="apple-subhead apple-subhead-center">
+              Limited seats. Free for 30 days.
+              {!reportUnlocked && " Join to unlock the sample intelligence report."}
+            </p>
+          </Reveal>
+
+          <Reveal>
+            <form
+              onSubmit={handleSubmit}
+              className="apple-panel max-w-xl mx-auto space-y-5"
+              data-testid="waitlist-form"
+              noValidate
             >
-              Reserve Your Free Spot <ArrowUpRight className="w-4 h-4" />
-            </Link>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-press inline-flex items-center gap-2 bg-[#25D366] text-black px-8 py-4 font-bold border-2 border-neutral-950"
-              data-testid="final-whatsapp-btn"
-            >
-              Join WhatsApp <ArrowUpRight className="w-4 h-4" />
-            </a>
-          </div>
-          <p className="mt-4 text-xs text-neutral-500">
-            Limited seats for live interaction · Get updates and resources directly on WhatsApp
-          </p>
-        </Reveal>
+              <div>
+                <Label className="apple-label">Full Name *</Label>
+                <Input data-testid="waitlist-input-name" value={form.full_name} onChange={(e) => update("full_name", e.target.value)} className={FIELD} autoComplete="name" />
+              </div>
+              <div>
+                <Label className="apple-label">Email *</Label>
+                <Input type="email" data-testid="waitlist-input-email" value={form.email} onChange={(e) => update("email", e.target.value)} className={FIELD} autoComplete="email" />
+              </div>
+              <div>
+                <Label className="apple-label">Phone Number *</Label>
+                <Input
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="+919876543210"
+                  data-testid="waitlist-input-phone"
+                  value={form.phone}
+                  onChange={(e) => update("phone", e.target.value)}
+                  onBlur={(e) => {
+                    const n = e.target.value.replace(/[^\d+]/g, "");
+                    if (n !== e.target.value) update("phone", n);
+                  }}
+                  className={FIELD}
+                  autoComplete="tel"
+                />
+                <p className="mt-2 pa-caption">
+                  Include country code, no spaces. Example: +919876543210
+                </p>
+              </div>
+              <div>
+                <Label className="apple-label">
+                  LinkedIn <span className="font-normal text-[var(--pa-muted-2)]">(optional)</span>
+                </Label>
+                <Input type="url" placeholder="https://www.linkedin.com/in/…" data-testid="waitlist-input-linkedin" value={form.linkedin_url} onChange={(e) => update("linkedin_url", e.target.value)} className={FIELD} />
+              </div>
+              <div>
+                <Label className="apple-label">Current Role *</Label>
+                <Input data-testid="waitlist-input-current-role" value={form.current_role} onChange={(e) => update("current_role", e.target.value)} className={FIELD} />
+              </div>
+              <div>
+                <Label className="apple-label">Target Role *</Label>
+                <Select value={form.target_role} onValueChange={(v) => update("target_role", v)}>
+                  <SelectTrigger className={`${FIELD} focus:ring-0 focus:ring-offset-0`} data-testid="waitlist-select-target-role">
+                    <SelectValue placeholder="Select…" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-[var(--pa-r-lg)]">
+                    {TARGET_ROLES.map((r) => <SelectItem key={r} value={r} className="rounded-[var(--pa-r-md)]">{r}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="apple-label">Biggest Challenge *</Label>
+                <Select value={form.biggest_challenge} onValueChange={(v) => update("biggest_challenge", v)}>
+                  <SelectTrigger className={`${FIELD} focus:ring-0 focus:ring-offset-0`} data-testid="waitlist-select-challenge">
+                    <SelectValue placeholder="Select…" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-[var(--pa-r-lg)]">
+                    {CHALLENGES.map((c) => <SelectItem key={c} value={c} className="rounded-[var(--pa-r-md)]">{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="apple-label">
+                  Additional Comments <span className="font-normal text-[var(--pa-muted-2)]">(optional)</span>
+                </Label>
+                <Textarea
+                  rows={3}
+                  maxLength={2000}
+                  data-testid="waitlist-input-comments"
+                  value={form.comments}
+                  onChange={(e) => update("comments", e.target.value)}
+                  className="saas-input mt-2 !h-auto py-3 focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+
+              <Magnetic strength={0.12} className="w-full pt-1">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="apple-btn apple-btn-dark w-full justify-center"
+                  data-testid="waitlist-submit-btn"
+                >
+                  {submitting ? "Submitting…" : "Get Early Access"}
+                </button>
+              </Magnetic>
+            </form>
+          </Reveal>
+        </div>
       </section>
+
+      {/* FAQ */}
+      <FaqSection />
     </div>
   );
 }

@@ -11,5 +11,5 @@ export const WHATSAPP_URL = "https://chat.whatsapp.com/K1tS6aHAiTqBdajExEQ6GZ";
 
 export const BRAND = {
   name: "PrepAlign",
-  tagline: "Break into AI & Startup Roles — Without Coding",
+  tagline: "AI Career Intelligence Platform",
 };

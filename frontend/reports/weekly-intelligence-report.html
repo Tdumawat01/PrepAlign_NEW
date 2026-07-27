@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PrepAlign Intelligence Report · Week of July 20-26, 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0f172a;
+    --ink-soft: #1e293b;
+    --muted: #475569;
+    --muted-2: #64748b;
+    --line: rgba(15, 23, 42, 0.1);
+    --line-strong: rgba(15, 23, 42, 0.16);
+    --surface: #f8fafc;
+    --surface-2: #f1f5f9;
+    --panel: #ffffff;
+    --green: #4f46e5;
+    --green-deep: #4338ca;
+    --green-soft: rgba(79, 70, 229, 0.12);
+    --interactive: #3b82f6;
+    --highlight: #7c3aed;
+    --warn: #d97706;
+    --warn-bg: #fff7ed;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Instrument Sans", "Helvetica Neue", sans-serif;
+    color: var(--ink);
+    background: var(--surface);
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .doc { max-width: 8.5in; margin: 0 auto; background: var(--panel); }
+
+  /* Print */
+  @page { size: letter; margin: 0.55in 0.52in 0.62in 0.52in; }
+  @media print {
+    body { background: white; font-size: 9.6pt; }
+    .doc { max-width: none; }
+    .cover {
+      min-height: 0 !important;
+      height: 9.75in;
+      max-height: 9.75in;
+      padding: 0.45in 0.4in 0.35in !important;
+      page-break-after: always;
+      page-break-inside: avoid;
+      overflow: hidden;
+    }
+    .cover::before { inset: 0.22in; }
+    .cover-main { padding: 0.55in 0 0.35in !important; }
+    .cover h1 { font-size: 28pt !important; }
+    .cover-metrics { margin-top: 0.5in !important; }
+    .section { page-break-inside: auto; }
+    .section-break { page-break-before: auto; }
+    .section-break.force { page-break-before: always; }
+    .avoid-break { page-break-inside: avoid; }
+    h2, h3 { page-break-after: avoid; }
+    thead { display: table-header-group; }
+    a { color: inherit; text-decoration: none; }
+    .no-print { display: none !important; }
+    /* PDF stamp supplies consistent header/footer */
+    .running-head { display: none !important; }
+    .content { padding: 0.12in 0 0.05in !important; }
+  }
+
+  /* Brand chrome (screen preview; PDF stamp adds final header/footer) */
+  .running-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 0 14px; margin: 0 0 22px;
+    border-bottom: 1px solid var(--line);
+    font-size: 8pt; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--muted); font-weight: 500;
+  }
+  .brand-mark { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 9.5pt; }
+  .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
+
+  /* Cover */
+  .cover {
+    min-height: 10in;
+    padding: 0.7in 0.6in 0.55in;
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(ellipse 80% 50% at 100% 0%, rgba(79,70,229,0.14), transparent 55%),
+      linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+    position: relative;
+  }
+  .cover::before {
+    content: ""; position: absolute; inset: 0.35in;
+    border: 1px solid var(--line); pointer-events: none;
+  }
+  .cover-top { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+  .cover-logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 13pt; letter-spacing: -0.02em; }
+  .cover-logo .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--green); }
+  .cover-meta { font-size: 8.5pt; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .cover-main { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; padding: 0.7in 0 0.4in; }
+  .cover-kicker { font-size: 9pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-deep); font-weight: 600; margin-bottom: 18px; }
+  .cover h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 600; font-size: 34pt; line-height: 1.12;
+    letter-spacing: -0.02em; margin: 0 0 16px; max-width: 12ch;
+  }
+  .cover-sub { font-size: 12.5pt; color: var(--muted); max-width: 36ch; line-height: 1.45; margin: 0 0 28px; }
+  .cover-line { width: 48px; height: 3px; background: var(--green); border-radius: 2px; margin-bottom: 28px; }
+  .cover-exec {
+    font-size: 11.5pt; line-height: 1.5; color: var(--ink-soft);
+    max-width: 48ch; border-left: 2px solid var(--green);
+    padding-left: 16px; margin: 0;
+  }
+  .cover-metrics {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin-top: auto; position: relative; z-index: 1;
+  }
+  .metric {
+    background: rgba(255,255,255,0.72); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 16px 14px;
+  }
+  .metric .v { font-family: "Newsreader", Georgia, serif; font-size: 22pt; font-weight: 600; letter-spacing: -0.02em; }
+  .metric .l { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+  /* Content pages */
+  .content { padding: 0.4in 0.42in 0.35in; }
+  .section { margin-bottom: 18px; }
+  .section-break { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+  .sec-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 8pt; letter-spacing: 0.12em; text-transform: uppercase;
+    font-weight: 600; color: var(--green-deep); margin-bottom: 8px;
+  }
+  .sec-label .bar { width: 14px; height: 2px; background: var(--green); }
+  h2 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 15.5pt; font-weight: 600; letter-spacing: -0.02em;
+    margin: 0 0 10px; line-height: 1.2;
+  }
+  h3 {
+    font-size: 11pt; font-weight: 600; margin: 12px 0 6px;
+    letter-spacing: -0.01em; color: var(--ink);
+  }
+  p { margin: 0 0 8px; color: var(--ink-soft); }
+  .lede { font-size: 11pt; color: var(--ink); }
+  ul.clean { margin: 0 0 12px; padding: 0; list-style: none; }
+  ul.clean li {
+    position: relative; padding: 5px 0 5px 16px;
+    border-bottom: 1px solid rgba(12,21,17,0.05);
+  }
+  ul.clean li:last-child { border-bottom: none; }
+  ul.clean li::before {
+    content: ""; position: absolute; left: 0; top: 0.72em;
+    width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .note { font-size: 9pt; color: var(--muted); margin-top: 8px; }
+
+  /* Callouts */
+  .callouts { display: grid; gap: 10px; margin: 12px 0 12px; }
+  .callout {
+    display: grid; grid-template-columns: 28px 1fr; gap: 10px;
+    align-items: start; padding: 11px 12px;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .callout.accent { background: var(--green-soft); border-color: rgba(79,70,229,0.28); }
+  .callout.warn { background: var(--warn-bg); border-color: rgba(154,107,47,0.25); }
+  .callout .ico { width: 18px; height: 18px; color: var(--green-deep); margin-top: 1px; }
+  .callout.warn .ico { color: var(--warn); }
+  .callout .k { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: var(--muted); margin-bottom: 3px; }
+  .callout .b { font-size: 10pt; color: var(--ink); line-height: 1.45; }
+  .callout .b strong { font-weight: 600; }
+
+  /* Tables */
+  .table-wrap { margin: 8px 0 12px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8.8pt; }
+  thead th {
+    text-align: left; background: var(--ink); color: #f3f7f4;
+    font-weight: 500; font-size: 7.5pt; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 7px 8px; vertical-align: top;
+  }
+  tbody td {
+    padding: 7px 8px; border-top: 1px solid var(--line);
+    vertical-align: top; color: var(--ink-soft); word-wrap: break-word;
+    overflow-wrap: anywhere; hyphens: auto;
+  }
+  tbody tr:nth-child(even) td { background: rgba(238,244,240,0.55); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.skill { font-weight: 600; color: var(--ink); }
+  .tag {
+    display: inline-block; font-size: 7.5pt; font-weight: 600;
+    letter-spacing: 0.04em; padding: 2px 7px; border-radius: 999px;
+    background: var(--green-soft); color: var(--green-deep);
+  }
+  .tag.later { background: #eef0f2; color: var(--muted); }
+  .tag.mid { background: #e8f0ff; color: #3a5a8c; }
+
+  /* Cards / chips */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+  .chip {
+    font-size: 8.5pt; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink-soft);
+  }
+  .plan {
+    counter-reset: day; margin: 12px 0 0; padding: 0; list-style: none;
+  }
+  .plan li {
+    display: grid; grid-template-columns: 52px 1fr; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--line); align-items: start;
+  }
+  .plan li:last-child { border-bottom: none; }
+  .plan .d {
+    font-size: 8pt; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--green-deep); padding-top: 2px;
+  }
+  .plan .t { color: var(--ink); font-size: 10pt; }
+
+  .roi-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .roi {
+    border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 12px; background: var(--surface);
+  }
+  .roi .k { font-size: 7.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .roi .b { font-size: 9.5pt; color: var(--ink); line-height: 1.4; }
+
+
+  .toc { margin: 8px 0 0; }
+  .toc-item {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 9.5pt;
+  }
+  .toc-item span:last-child { color: var(--muted); font-size: 8pt; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .score-bar {
+    display: inline-flex; align-items: baseline; gap: 6px;
+  }
+  .score-bar .big {
+    font-family: "Newsreader", Georgia, serif; font-size: 28pt; font-weight: 600;
+    letter-spacing: -0.03em; line-height: 1;
+  }
+  .score-bar .of { color: var(--muted); font-size: 10pt; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<!-- ================= COVER ================= -->
+<section class="cover">
+  <div class="cover-top">
+    <div class="cover-logo"><span class="dot"></span> PrepAlign</div>
+    <div class="cover-meta">Edition 30 · Sample</div>
+  </div>
+  <div class="cover-main">
+    <div class="cover-kicker">Intelligence Report</div>
+    <h1>Weekly Career Intelligence</h1>
+    <p class="cover-sub">Week of July 20-26, 2026<br/>AI Career Intelligence for ambitious professionals</p>
+    <div class="cover-line"></div>
+    <p class="cover-exec">This week’s hiring market rewards people who sit at the intersection of AI, product, and business execution, especially in roles that turn ambiguity into shipped outcomes.</p>
+  </div>
+  <div class="cover-metrics">
+    <div class="metric"><div class="v">78</div><div class="l">Hiring heat / 100</div></div>
+    <div class="metric"><div class="v">15.4%</div><div class="l">India tech roles citing AI</div></div>
+    <div class="metric"><div class="v">10</div><div class="l">Ranked opportunities</div></div>
+  </div>
+</section>
+
+<div class="content">
+
+<!-- ================= TOC / SNAPSHOT ================= -->
+<section class="section avoid-break">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Week of July 20-26, 2026</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Overview</div>
+  <h2>Inside this report</h2>
+  </div>
+  <p class="lede">Read in 5-7 minutes. Scan callouts first, then tables, then the 7-day plan.</p>
+  <div class="toc">
+    <div class="toc-item"><span>Executive Summary</span><span>What changed</span></div>
+    <div class="toc-item"><span>Market &amp; Hiring Intelligence</span><span>Signals</span></div>
+    <div class="toc-item"><span>Skill &amp; Company Intelligence</span><span>Targets</span></div>
+    <div class="toc-item"><span>Resume, LinkedIn &amp; Interview</span><span>Playbooks</span></div>
+    <div class="toc-item"><span>AI Trends &amp; Predictions</span><span>Forward view</span></div>
+    <div class="toc-item"><span>Opportunity Rankings &amp; Decision Engine</span><span>Actions</span></div>
+    <div class="toc-item"><span>Key Takeaways &amp; 7-Day Plan</span><span>Execute</span></div>
+  </div>
+</section>
+
+<!-- ================= EXECUTIVE SUMMARY ================= -->
+<section class="section">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Executive Summary</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Executive Summary</div>
+  <h2>What changed this week</h2>
+  </div>
+  <p class="lede">This week’s hiring market is rewarding candidates who can operate at the intersection of AI, product, and business execution, especially in roles that turn ambiguity into shipped outcomes. The strongest signals point to AI-native operations, founder’s office, product ops, GTM engineering, and AI platform roles, while traditional generic roles are comparatively weaker.</p>
+
+  <div class="callouts">
+    <div class="callout accent">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19v-6"/><path d="M8 19v-3"/><path d="M16 19V9"/><path d="M20 19V5"/><path d="M4 19v-2"/></svg>
+      <div>
+        <div class="k">Hiring signal</div>
+        <div class="b"><strong>Overall Hiring Heat Score: 78/100.</strong> The market is active, but the bar is rising: employers want proof of execution, AI fluency, and cross-functional ownership more than credential signaling.</div>
+      </div>
+    </div>
+    <div class="callout">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none"/></svg>
+      <div>
+        <div class="k">Key insight · Biggest opportunity</div>
+        <div class="b">AI-native business roles in fast-moving startups and scaling enterprises that need one person to connect product, ops, and AI workflows.</div>
+      </div>
+    </div>
+    <div class="callout warn">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></svg>
+      <div>
+        <div class="k">Hiring risk</div>
+        <div class="b"><strong>Biggest risk for job seekers:</strong> Applying with a traditional resume that does not show AI tools, proof-of-work, or measurable business impact.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MARKET / HIRING ================= -->
+<section class="section">
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Market Intelligence</div>
+  <h2>Hiring trends</h2>
+  </div>
+  <p>The clearest trend is that AI is no longer a niche skill; it is becoming a baseline expectation across tech and business roles in India. Naukri-linked reporting says AI skills now appear in 15.4% of technology job descriptions in India, up from 0.9% in 2020, which signals structural rather than temporary demand. AI-native companies are also reorganizing around hybrid roles such as AI Operations, prompt/agent workflows, and cross-functional builders who can ship quickly.</p>
+
+  <div class="two-col avoid-break">
+    <div>
+      <h3>Top 5 hiring trends</h3>
+      <ul class="clean">
+        <li>AI fluency is becoming table stakes in business-facing roles, not just engineering roles.</li>
+        <li>Companies are hiring for operators who can own product + workflow + adoption end to end.</li>
+        <li>AI ops and agentic workflow roles are expanding across enterprise, startup, and services settings.</li>
+        <li>Hiring is strongest where AI connects to revenue, productivity, or workflow automation.</li>
+        <li>Employers are screening for proof-of-work and practical execution, not just polished resumes.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Biggest market shifts</h3>
+      <ul class="clean">
+        <li>The market is moving from “AI experimentation” to “AI embedded in operating models”.</li>
+        <li>India’s AI startup funding remains a strong backdrop for hiring, with H1 2026 showing a sharp surge in AI investment and a higher bar for talent.</li>
+        <li>Companies are prioritizing candidates who can work across product, ops, and customer-facing execution, especially in founder-led environments.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:14px">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16l4-4 3 3 6-7"/><path d="M15 8h4v4"/></svg>
+    <div>
+      <div class="k">Market shift</div>
+      <div class="b">The fastest-growing roles are not always titled “AI Engineer”; they often sit in operations, product, and enablement layers. Strongest families this week: AI Ops, AI Product, Product Operations, GTM Engineer, Solutions Engineering, Founder's Office, and Strategy &amp; Ops with AI context.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FASTEST ROLES ================= -->
+<section class="section">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Opportunity Intelligence</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Opportunity Intelligence</div>
+  <h2>Fastest growing roles</h2>
+  </div>
+  <div class="table-wrap avoid-break">
+    <table>
+      <colgroup>
+        <col style="width:28%" />
+        <col style="width:28%" />
+        <col style="width:44%" />
+      </colgroup>
+      <thead>
+        <tr><th>Role family</th><th>Hiring signal</th><th>Candidate implication</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="skill">AI Operations / AI Ops Engineer</td><td>Strong and broadening</td><td>Learn agent workflows, observability, and deployment thinking.</td></tr>
+        <tr><td class="skill">Founder's Office / Product Ops</td><td>Strong in founder-led companies</td><td>Show ownership, prioritization, and cross-functional execution.</td></tr>
+        <tr><td class="skill">GTM Engineer / RevOps-adjacent</td><td>Rising where AI meets revenue</td><td>Build proof that you can automate pipeline and improve conversion.</td></tr>
+        <tr><td class="skill">Solutions Engineering</td><td>Strong in AI-native B2B companies</td><td>Demonstrate technical storytelling and customer problem solving.</td></tr>
+        <tr><td class="skill">Strategy &amp; Operations</td><td>Strong when paired with analytics and AI tools</td><td>Focus on decision support, process design, and measurable impact.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>Hiring slowdown areas</h3>
+      <ul class="clean">
+        <li>Generic coordinator roles without ownership scope.</li>
+        <li>Purely manual operations roles with no AI or automation layer.</li>
+        <li>Junior roles without business context or portfolio proof.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Emerging AI business roles</h3>
+      <ul class="clean">
+        <li>AI workflow operator</li>
+        <li>Agentic operations specialist</li>
+        <li>AI enablement lead</li>
+        <li>Prompt/workflow designer</li>
+        <li>AI-native customer operations associate</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout accent" style="margin-top:14px">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+    <div>
+      <div class="k">Recommended action</div>
+      <div class="b">Position yourself as a builder of business outcomes, not a task executor. A strong application now needs <strong>one AI workflow</strong>, <strong>one measurable business improvement</strong>, and <strong>one example of cross-functional ownership</strong>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SKILLS ================= -->
+<section class="section section-break">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Skill Intelligence</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Skill Intelligence</div>
+  <h2>Skills the market is rewarding</h2>
+  </div>
+  <p>The market is rewarding candidates who combine business judgment with practical AI tooling and communication strength. The skills below are showing up implicitly in job descriptions and hiring signals across AI-native roles.</p>
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col style="width:20%" />
+        <col style="width:10%" />
+        <col style="width:14%" />
+        <col style="width:12%" />
+        <col style="width:44%" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Skill</th>
+          <th class="num">Demand</th>
+          <th>Growth</th>
+          <th>Difficulty</th>
+          <th>Recommendation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="skill">AI workflow design</td><td class="num">95</td><td>Rising fast</td><td>Medium</td><td>Build one workflow automation project and explain the business value.</td></tr>
+        <tr><td class="skill">Product thinking</td><td class="num">93</td><td>Rising</td><td>Medium</td><td>Show how you turn user pain into decisions and shipped changes.</td></tr>
+        <tr><td class="skill">Writing and synthesis</td><td class="num">92</td><td>Rising</td><td>Medium</td><td>Your memos, PRDs, and outreach need to be crisp and concise.</td></tr>
+        <tr><td class="skill">Stakeholder management</td><td class="num">91</td><td>Rising</td><td>Medium</td><td>Highlight situations where you aligned founders, users, and engineers.</td></tr>
+        <tr><td class="skill">Prompting for business tasks</td><td class="num">90</td><td>Rising</td><td>Low</td><td>Use it for specs, research, emails, and customer ops demos.</td></tr>
+        <tr><td class="skill">Customer discovery</td><td class="num">89</td><td>Rising</td><td>Medium</td><td>Show that you can extract pain points and translate them into actions.</td></tr>
+        <tr><td class="skill">Experimentation and metrics</td><td class="num">88</td><td>Rising</td><td>Medium</td><td>Emphasize funnel, conversion, retention, or process metrics.</td></tr>
+        <tr><td class="skill">Python automation</td><td class="num">87</td><td>Rising</td><td>Medium</td><td>Use scripts to automate repetitive business or ops work.</td></tr>
+        <tr><td class="skill">LLM observability / evals</td><td class="num">86</td><td>Rising fast</td><td>Hard</td><td>Learn the basics if targeting AI ops or platform roles.</td></tr>
+        <tr><td class="skill">SQL / analytics</td><td class="num">84</td><td>Stable-to-rising</td><td>Medium</td><td>Keep it if you can pair it with business decisions.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>AI tools mentioned</h3>
+  <div class="chip-row">
+    <span class="chip">LangSmith</span>
+    <span class="chip">LangGraph</span>
+    <span class="chip">Vertex AI</span>
+    <span class="chip">MCP tool interfaces</span>
+    <span class="chip">AI copilots &amp; agentic workflows</span>
+  </div>
+  <h3>Should candidates learn this?</h3>
+  <ul class="clean">
+    <li><strong>LangSmith:</strong> YES</li>
+    <li><strong>LangGraph:</strong> YES for AI-product / AI-ops paths</li>
+    <li><strong>Vertex AI:</strong> LATER unless targeting Google ecosystem roles</li>
+    <li><strong>MCP:</strong> YES if targeting agentic or platform-facing roles</li>
+    <li><strong>Generic prompt tools:</strong> YES, but only as part of workflow proof</li>
+  </ul>
+</section>
+
+<!-- ================= COMPANIES ================= -->
+<section class="section section-break force">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Company Intelligence</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Company Intelligence</div>
+  <h2>Company targets this week</h2>
+  </div>
+  <p>The best targets this week are companies where the hiring need is concrete: AI adoption, product expansion, workflow automation, or revenue acceleration.</p>
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col style="width:16%" />
+        <col style="width:18%" />
+        <col style="width:11%" />
+        <col style="width:9%" />
+        <col style="width:8%" />
+        <col style="width:8%" />
+        <col style="width:10%" />
+        <col style="width:20%" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Why they matter</th>
+          <th>Stage</th>
+          <th>AI maturity</th>
+          <th class="num">Opp.</th>
+          <th class="num">Comp.</th>
+          <th>Contact</th>
+          <th>Outreach</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="skill">Inc42 Media</td>
+          <td>Unified product + mobile + internal AI rollout</td>
+          <td>Growth</td><td>High</td>
+          <td class="num">91</td><td class="num">78</td>
+          <td>Founder’s office / product leadership</td>
+          <td>Show a 1-page plan for their AI workflow rollout.</td>
+        </tr>
+        <tr>
+          <td class="skill">Cargill India</td>
+          <td>Enterprise AI platform and agentic workflows</td>
+          <td>Mature enterprise</td><td>High</td>
+          <td class="num">88</td><td class="num">84</td>
+          <td>AI platform / eng leadership</td>
+          <td>Send a tailored AI ops case study for internal workflows.</td>
+        </tr>
+        <tr>
+          <td class="skill">Founder-led product co.</td>
+          <td>Product ops + demos + feedback loop</td>
+          <td>Early stage</td><td>Medium</td>
+          <td class="num">86</td><td class="num">65</td>
+          <td>Founders</td>
+          <td>Pitch a customer feedback-to-feature operating system.</td>
+        </tr>
+        <tr>
+          <td class="skill">AI-native YC startups (India)</td>
+          <td>Well-funded and actively hiring</td>
+          <td>Seed to growth</td><td>Varies</td>
+          <td class="num">85</td><td class="num">80</td>
+          <td>Founder / hiring manager</td>
+          <td>Target with role-specific proof-of-work and fast execution examples.</td>
+        </tr>
+        <tr>
+          <td class="skill">AI ops-heavy enterprises</td>
+          <td>Large AI operations volume</td>
+          <td>Mature</td><td>High</td>
+          <td class="num">82</td><td class="num">82</td>
+          <td>Platform / operations</td>
+          <td>Offer a workflow automation or reliability improvement memo.</td>
+        </tr>
+        <tr>
+          <td class="skill">BNP Paribas India Solutions</td>
+          <td>AI/MLOps for IT production</td>
+          <td>Mature</td><td>High</td>
+          <td class="num">80</td><td class="num">79</td>
+          <td>AI/MLOps leadership</td>
+          <td>Show reliable production thinking and governance awareness.</td>
+        </tr>
+        <tr>
+          <td class="skill">Deutsche Bank</td>
+          <td>Advanced AI engineering stack</td>
+          <td>Mature</td><td>High</td>
+          <td class="num">79</td><td class="num">83</td>
+          <td>Lead AI engineering</td>
+          <td>Emphasize enterprise AI, evaluation, and production discipline.</td>
+        </tr>
+        <tr>
+          <td class="skill">Synopsys India</td>
+          <td>DevOps + AI-driven pipeline automation</td>
+          <td>Mature</td><td>Medium-high</td>
+          <td class="num">78</td><td class="num">76</td>
+          <td>Platform engineering</td>
+          <td>Offer an infra automation or release quality improvement project.</td>
+        </tr>
+        <tr>
+          <td class="skill">Healthcare AI startups</td>
+          <td>Strong AI demand, regulated use case</td>
+          <td>Early/growth</td><td>Medium-high</td>
+          <td class="num">77</td><td class="num">72</td>
+          <td>Founder / product / ops</td>
+          <td>Position yourself on compliance, workflows, and adoption.</td>
+        </tr>
+        <tr>
+          <td class="skill">AI concierge startups</td>
+          <td>New consumer/business category momentum</td>
+          <td>Early</td><td>Emerging</td>
+          <td class="num">76</td><td class="num">70</td>
+          <td>Founder / product</td>
+          <td>Lead with customer workflow and retention logic.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Opp. = Opportunity Score · Comp. = Competition Score · Proof-of-work potential is High / Very high across founder-led and AI-native targets.</p>
+</section>
+
+<!-- ================= HIDDEN SIGNALS ================= -->
+<section class="section section-break">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Hiring Signals</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Hiring Signals</div>
+  <h2>Hidden patterns companies filter for</h2>
+  </div>
+  <p>Companies are quietly filtering for candidates who can reduce founder workload, shorten decision cycles, and improve adoption. They rarely say this directly, but they expect speed, independence, and good taste in execution.</p>
+
+  <div class="callout" style="margin-bottom:14px">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></svg>
+    <div>
+      <div class="k">Hidden pattern</div>
+      <div class="b">They expect speed, independence, and good taste in execution, even when the job description never says so.</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>Skills expected but rarely mentioned</h3>
+      <ul class="clean">
+        <li>Writing tight specs</li>
+        <li>Translating ambiguity into action</li>
+        <li>Knowing when not to overbuild</li>
+        <li>Basic AI workflow literacy</li>
+        <li>Commercial judgment</li>
+      </ul>
+      <h3>Behavioral expectations</h3>
+      <ul class="clean">
+        <li>Move fast without waiting for permission</li>
+        <li>Handle partial information</li>
+        <li>Push decisions forward</li>
+        <li>Communicate clearly and frequently</li>
+      </ul>
+    </div>
+    <div>
+      <h3>How candidates should adapt</h3>
+      <ul class="clean">
+        <li>Replace “responsible for” bullets with “shipped” bullets</li>
+        <li>Show that you can own a problem from intake to outcome</li>
+        <li>Include one example where you used AI to save time or improve quality</li>
+        <li>Demonstrate calm, structured thinking under ambiguity</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESUME ================= -->
+<section class="section">
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Resume Intelligence</div>
+  <h2>Make the resume read like an operator’s toolkit</h2>
+  </div>
+  <p>Your resume should read like an operator’s toolkit, not a job history document. The strongest version will combine metrics, AI usage, and cross-functional outcomes in every relevant bullet.</p>
+  <div class="two-col">
+    <div>
+      <h3>Skills to add</h3>
+      <div class="chip-row">
+        <span class="chip">AI workflow automation</span>
+        <span class="chip">Stakeholder management</span>
+        <span class="chip">Product operations</span>
+        <span class="chip">Customer discovery</span>
+        <span class="chip">Metrics-driven execution</span>
+      </div>
+      <h3>Keywords to include</h3>
+      <div class="chip-row">
+        <span class="chip">Agentic workflows</span>
+        <span class="chip">Cross-functional ownership</span>
+        <span class="chip">Go-to-market</span>
+        <span class="chip">AI enablement</span>
+        <span class="chip">Process optimization</span>
+        <span class="chip">PRD</span>
+        <span class="chip">Experimentation</span>
+        <span class="chip">Customer feedback loop</span>
+      </div>
+    </div>
+    <div>
+      <h3>Projects worth highlighting</h3>
+      <ul class="clean">
+        <li>Any automation that saved time</li>
+        <li>Any dashboard or analysis that changed a decision</li>
+        <li>Any user research or customer conversation work</li>
+        <li>Any AI experiment, internal tool, or workflow prototype</li>
+      </ul>
+      <h3>Buzzwords to avoid</h3>
+      <ul class="clean">
+        <li>Hardworking</li>
+        <li>Passionate</li>
+        <li>Team player</li>
+        <li>Results-driven</li>
+        <li>Fast learner without evidence</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LINKEDIN ================= -->
+<section class="section section-break">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>LinkedIn Intelligence</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> LinkedIn Intelligence</div>
+  <h2>Signal the role you want</h2>
+  </div>
+  <p>Your LinkedIn headline should signal the role you want, not the role you had. Recruiters screening for AI-native business roles want a profile that shows business impact, AI fluency, and operator mindset.</p>
+  <h3>Headline improvements</h3>
+  <ul class="clean">
+    <li>“AI-Enabled Strategy &amp; Ops | Product Analytics | Workflow Automation.”</li>
+    <li>“Founder’s Office / Product Ops | AI Workflows | Growth &amp; Customer Insights.”</li>
+    <li>“AI-Native Business Operations | GTM Support | Product Execution.”</li>
+  </ul>
+  <div class="two-col">
+    <div>
+      <h3>Featured section ideas</h3>
+      <ul class="clean">
+        <li>One 1-page case study</li>
+        <li>One automation demo</li>
+        <li>One customer or market insight memo</li>
+        <li>One concise teardown of a company workflow</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Content topics</h3>
+      <ul class="clean">
+        <li>AI workflow breakdowns</li>
+        <li>Hiring market observations</li>
+        <li>Product/process improvements</li>
+        <li>Lessons from customer interviews</li>
+        <li>How AI changes business execution</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INTERVIEW ================= -->
+<section class="section">
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Interview Intelligence</div>
+  <h2>Practical judgment over abstract theory</h2>
+  </div>
+  <p>The interview bar is shifting toward practical judgment, not abstract theory. Expect assignments that test whether you can think clearly, prioritize well, and communicate like an internal operator.</p>
+  <h3>Common themes</h3>
+  <ul class="clean">
+    <li>“How would you improve this workflow?”</li>
+    <li>“What would you do in your first 30 days?”</li>
+    <li>“How do you prioritize between competing requests?”</li>
+    <li>“How would you use AI here without causing risk?”</li>
+    <li>“How do you know this change actually worked?”</li>
+  </ul>
+  <div class="two-col">
+    <div>
+      <h3>Assignments to prepare for</h3>
+      <ul class="clean">
+        <li>PRD-style writeups</li>
+        <li>Funnel analysis</li>
+        <li>Customer feedback synthesis</li>
+        <li>Workflow redesign</li>
+        <li>AI use-case proposals</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Business cases likely to appear</h3>
+      <ul class="clean">
+        <li>Reduce manual ops load</li>
+        <li>Increase conversion from demos or trials</li>
+        <li>Improve internal productivity</li>
+        <li>Improve customer onboarding</li>
+        <li>Turn a founder bottleneck into a system</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AI TRENDS ================= -->
+<section class="section section-break force">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>AI Trends</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> AI Trends</div>
+  <h2>Tools gaining momentum</h2>
+  </div>
+  <p>The tools gaining momentum are those that help candidates or companies build reliable workflows, not just generate content. Candidates should learn enough to discuss how these tools fit into real systems, not just how to use the UI.</p>
+  <div class="table-wrap avoid-break">
+    <table>
+      <colgroup>
+        <col style="width:28%" />
+        <col style="width:40%" />
+        <col style="width:32%" />
+      </colgroup>
+      <thead>
+        <tr><th>Tool / platform</th><th>Use case</th><th>Learn?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="skill">LangSmith</td><td>Evals and observability</td><td><span class="tag">YES</span></td></tr>
+        <tr><td class="skill">LangGraph</td><td>Agent workflows</td><td><span class="tag">YES</span></td></tr>
+        <tr><td class="skill">MCP</td><td>Secure tool exposure</td><td><span class="tag">YES</span></td></tr>
+        <tr><td class="skill">Vertex AI</td><td>Enterprise AI stack</td><td><span class="tag later">LATER</span></td></tr>
+        <tr><td class="skill">AI copilots</td><td>Productivity support</td><td><span class="tag">YES</span></td></tr>
+        <tr><td class="skill">Automation platforms</td><td>Process automation</td><td><span class="tag">YES</span></td></tr>
+        <tr><td class="skill">Semantic caching</td><td>Cost/latency optimization</td><td><span class="tag mid">YES for AI-ops tracks</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Market predictions</h3>
+  <p>The market is likely to keep expanding in AI operations, founder’s office, product ops, and AI-adjacent GTM roles as companies operationalize AI rather than merely test it. In India, AI hiring should stay concentrated in startups, AI-native firms, and enterprise teams building internal platforms.</p>
+  <div class="table-wrap avoid-break">
+    <table>
+      <colgroup><col style="width:82%" /><col style="width:18%" /></colgroup>
+      <thead><tr><th>Prediction</th><th class="num">Confidence</th></tr></thead>
+      <tbody>
+        <tr><td>AI Ops / AI Operations roles will keep growing.</td><td class="num">88</td></tr>
+        <tr><td>Founder’s Office roles will increasingly demand AI fluency.</td><td class="num">84</td></tr>
+        <tr><td>Product Ops will merge more tightly with automation and analytics.</td><td class="num">81</td></tr>
+        <tr><td>Companies will favor candidates who can show proof-of-work.</td><td class="num">90</td></tr>
+        <tr><td>AI tools will become expected in non-technical business roles.</td><td class="num">87</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= RANKINGS ================= -->
+<section class="section section-break">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Opportunity Rankings</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Opportunity Rankings</div>
+  <h2>Top opportunities this week</h2>
+  </div>
+  <p>The top opportunities this week are those where the role is broad enough to create leverage but specific enough to have a measurable business effect.</p>
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col style="width:6%" />
+        <col style="width:18%" />
+        <col style="width:18%" />
+        <col style="width:8%" />
+        <col style="width:10%" />
+        <col style="width:12%" />
+        <col style="width:28%" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="num">#</th>
+          <th>Company</th>
+          <th>Role</th>
+          <th class="num">Opp.</th>
+          <th class="num">Interview</th>
+          <th>Competition</th>
+          <th>Best next step</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="skill">Inc42 Media</td><td>Founder's Office / Product &amp; AI</td><td class="num">91</td><td class="num">72</td><td>High</td><td>Send a tailored product + AI rollout memo.</td></tr>
+        <tr><td class="num">2</td><td class="skill">Cargill India</td><td>AI Ops Engineer</td><td class="num">88</td><td class="num">63</td><td>High</td><td>Build a 1-page AI ops reliability improvement case.</td></tr>
+        <tr><td class="num">3</td><td class="skill">Founder-led product co.</td><td>Founder’s Office / Product Ops</td><td class="num">86</td><td class="num">68</td><td>Medium</td><td>Show a customer-to-roadmap operating loop.</td></tr>
+        <tr><td class="num">4</td><td class="skill">YC India AI startups</td><td>AI business roles</td><td class="num">85</td><td class="num">52</td><td>Very high</td><td>Apply with proof-of-work and speed.</td></tr>
+        <tr><td class="num">5</td><td class="skill">BNP Paribas India Solutions</td><td>Senior AI/MLOps</td><td class="num">80</td><td class="num">49</td><td>High</td><td>Tailor for production AI governance.</td></tr>
+        <tr><td class="num">6</td><td class="skill">Deutsche Bank</td><td>Lead AI Engineer</td><td class="num">79</td><td class="num">42</td><td>Very high</td><td>Emphasize enterprise-grade AI execution.</td></tr>
+        <tr><td class="num">7</td><td class="skill">Synopsys India</td><td>DevOps / AI automation</td><td class="num">78</td><td class="num">55</td><td>Medium</td><td>Pitch an automation/reliability improvement.</td></tr>
+        <tr><td class="num">8</td><td class="skill">Healthcare AI startups</td><td>AI ops / product ops</td><td class="num">77</td><td class="num">58</td><td>Medium</td><td>Lead with compliance-aware workflow thinking.</td></tr>
+        <tr><td class="num">9</td><td class="skill">AI concierge startups</td><td>Product / ops</td><td class="num">76</td><td class="num">60</td><td>Medium</td><td>Offer a retention and adoption plan.</td></tr>
+        <tr><td class="num">10</td><td class="skill">Other AI-native startups</td><td>Ops / GTM</td><td class="num">75</td><td class="num">55</td><td>Medium-high</td><td>Apply with role-specific proof-of-work.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= DECISION ENGINE ================= -->
+<section class="section section-break force">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Decision Engine</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Decision Engine</div>
+  <h2>What you should do next</h2>
+  </div>
+  <p>If you are looking for a job today, the best move is to target companies where AI is changing execution, not just branding. For a candidate with your profile, the highest-leverage path is founder’s office, product operations, or strategy &amp; ops with strong AI and analytics language.</p>
+
+  <div class="two-col">
+    <div>
+      <h3>Top 5 companies</h3>
+      <ul class="clean">
+        <li>Inc42 Media</li>
+        <li>Founder-led product company</li>
+        <li>Cargill India</li>
+        <li>AI-native YC startups in India</li>
+        <li>Healthcare AI startups</li>
+      </ul>
+      <h3>Top 3 skills to learn</h3>
+      <ul class="clean">
+        <li>AI workflow design</li>
+        <li>Product thinking</li>
+        <li>Stakeholder management</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Top proof-of-work project</h3>
+      <p>Build a “Founder’s Office AI Operating System” for a real company: customer intake, prioritization, weekly decisions, and AI-assisted workflow automation.</p>
+      <h3>Top networking strategy</h3>
+      <p>Reach out to founders and operators with a specific 1-page memo about how to remove one bottleneck in their current workflow.</p>
+      <h3>Top outreach strategy</h3>
+      <p>Use a short note with one insight, one proposed fix, and one artifact link. Do not ask for “opportunities”; ask for a 10-minute review of your proposed solution.</p>
+    </div>
+  </div>
+
+  <div class="roi-grid avoid-break">
+    <div class="roi"><div class="k">Highest ROI · Today</div><div class="b">Draft one tailored proof-of-work memo for your top target company.</div></div>
+    <div class="roi"><div class="k">Highest ROI · This week</div><div class="b">Ship one visible artifact and send it to 20 targeted people.</div></div>
+    <div class="roi"><div class="k">Highest ROI · This month</div><div class="b">Create a portfolio of 3 role-specific artifacts: one ops memo, one AI workflow demo, one customer/problem synthesis.</div></div>
+  </div>
+</section>
+
+<!-- ================= TAKEAWAYS ================= -->
+<section class="section section-break">
+  <div class="running-head">
+    <span class="brand-mark"><span class="brand-dot"></span> PrepAlign Intelligence</span>
+    <span>Key Takeaways</span>
+  </div>
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Key Takeaways</div>
+  <h2>What PrepAlign learned</h2>
+  </div>
+  <p>This week’s intelligence engine should absorb a few durable signals: AI fluency is now expected in business roles; hiring teams want operators who can ship and communicate; and proof-of-work is becoming a decisive filter. The strongest candidate profiles will combine analytics, business judgment, and AI-enabled execution rather than any one skill alone.</p>
+  <div class="two-col">
+    <div>
+      <h3>New hiring patterns</h3>
+      <ul class="clean">
+        <li>Founder’s office is becoming a product-and-ops hybrid</li>
+        <li>AI roles are expanding into enterprise workflows</li>
+        <li>Mid-level “builder-operator” profiles are favored over pure juniors</li>
+      </ul>
+      <h3>Emerging skills</h3>
+      <ul class="clean">
+        <li>Agentic workflow design</li>
+        <li>AI observability</li>
+        <li>Structured decision memos</li>
+        <li>Workflow automation</li>
+        <li>Customer discovery with AI assistance</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Behavioral signals</h3>
+      <ul class="clean">
+        <li>Speed matters</li>
+        <li>Ownership matters</li>
+        <li>Taste matters</li>
+        <li>Clear writing matters</li>
+        <li>AI use in daily work matters</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 7 DAY PLAN ================= -->
+<section class="section">
+  <div class="avoid-break">
+  <div class="sec-label"><span class="bar"></span> Action Plan</div>
+  <h2>7-day action plan</h2>
+  </div>
+  <ol class="plan">
+    <li><span class="d">Day 1</span><span class="t">Choose 3 target companies and map their business bottlenecks.</span></li>
+    <li><span class="d">Day 2</span><span class="t">Build one 1-page proof-of-work memo for the best target.</span></li>
+    <li><span class="d">Day 3</span><span class="t">Create a resume version tailored to AI-native business roles.</span></li>
+    <li><span class="d">Day 4</span><span class="t">Update LinkedIn headline, featured section, and about section.</span></li>
+    <li><span class="d">Day 5</span><span class="t">Send 10 targeted outreach messages with a specific insight and artifact.</span></li>
+    <li><span class="d">Day 6</span><span class="t">Practice 5 interview questions around prioritization, AI use, and ownership.</span></li>
+    <li><span class="d">Day 7</span><span class="t">Publish or share one portfolio piece publicly and follow up with all warm contacts.</span></li>
+  </ol>
+</section>
+
+
+<p class="note" style="margin-top:28px">PrepAlign · AI Career Intelligence Platform · Confidential sample for waitlist members · Edition 30 · Week of July 20-26, 2026</p>
+
+</div><!-- /.content -->
+</div><!-- /.doc -->
+</body>
+</html>

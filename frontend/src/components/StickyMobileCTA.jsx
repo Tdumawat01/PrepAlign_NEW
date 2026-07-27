@@ -1,29 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { MessageCircle, Ticket } from "lucide-react";
-import { WHATSAPP_URL } from "../lib/constants";
+import { Sparkles } from "lucide-react";
+import { handleSectionClick } from "../lib/scroll";
 
 export default function StickyMobileCTA() {
   return (
     <div
-      className="md:hidden fixed bottom-0 inset-x-0 z-40 grid grid-cols-2 border-t border-neutral-200 bg-white"
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--pa-border)] bg-[var(--pa-panel)] pb-[env(safe-area-inset-bottom,0px)]"
       data-testid="sticky-mobile-cta"
     >
-      <Link
-        to="/webinar"
-        className="flex items-center justify-center gap-2 bg-neutral-950 text-white py-3.5 text-sm font-bold"
-        data-testid="sticky-webinar-btn"
-      >
-        <Ticket className="w-4 h-4" /> Reserve Spot
-      </Link>
       <a
-        href={WHATSAPP_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 bg-[#25D366] text-black py-3.5 text-sm font-bold"
-        data-testid="sticky-whatsapp-btn"
+        href="/#waitlist"
+        onClick={(e) => handleSectionClick(e, "waitlist")}
+        className="apple-btn apple-btn-whatsapp w-full !rounded-none min-h-12"
+        data-testid="sticky-waitlist-btn"
       >
-        <MessageCircle className="w-4 h-4" /> WhatsApp
+        <Sparkles className="pa-icon" strokeWidth={1.75} /> Join Early Access Waitlist
       </a>
     </div>
   );

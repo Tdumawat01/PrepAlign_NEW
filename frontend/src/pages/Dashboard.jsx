@@ -3,6 +3,8 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { API } from "../lib/constants";
 import { useAuth } from "../context/AuthContext";
+import { Reveal, Stagger, StaggerItem } from "../components/Reveal";
+import { Skeleton } from "../components/Skeleton";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -28,8 +30,10 @@ export default function Dashboard() {
 
   if (checking) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-sm text-neutral-500">
-        Loading…
+      <div className="apple-page apple-page-y space-y-4">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-12 w-64" />
+        <Skeleton className="h-4 w-80" />
       </div>
     );
   }
@@ -37,30 +41,39 @@ export default function Dashboard() {
   if (!user) return null;
 
   return (
-    <div data-testid="page-dashboard" className="mx-auto max-w-4xl px-5 sm:px-8 py-16 md:py-24">
-      <p className="label-eyebrow mb-4">Signed in</p>
-      <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.95]">
-        Hi {user.name?.split(" ")[0] || "there"}.
-      </h1>
-      <p className="mt-4 text-neutral-600 max-w-xl">
-        You’re signed in as <span className="font-semibold">{user.email}</span>. Next up: register for the webinar and join the WhatsApp group.
-      </p>
-      <div className="mt-10 grid sm:grid-cols-2 gap-0 border-t border-l border-neutral-200">
-        <Link to="/webinar" className="border-r border-b border-neutral-200 p-8 hover:bg-neutral-50 transition-colors" data-testid="dashboard-webinar-card">
-          <p className="label-eyebrow">Action</p>
-          <p className="mt-3 text-2xl font-black tracking-tight">Reserve webinar seat →</p>
-        </Link>
-        <Link to="/mentorship" className="border-r border-b border-neutral-200 p-8 hover:bg-neutral-50 transition-colors" data-testid="dashboard-mentorship-card">
-          <p className="label-eyebrow">Action</p>
-          <p className="mt-3 text-2xl font-black tracking-tight">Request 1:1 mentorship →</p>
-        </Link>
-        {user.is_admin ? (
-          <Link to="/admin" className="sm:col-span-2 border-r border-b border-neutral-200 p-8 bg-neutral-950 text-white hover:bg-neutral-800 transition-colors" data-testid="dashboard-admin-card">
-            <p className="label-eyebrow text-neutral-500">Admin</p>
-            <p className="mt-3 text-2xl font-black tracking-tight">Open admin dashboard →</p>
+    <div data-testid="page-dashboard" className="apple-page apple-page-y text-left">
+      <Reveal>
+        <p className="apple-eyebrow mb-4">Signed in</p>
+        <h1 className="apple-headline">
+          Hi {user.name?.split(" ")[0] || "there"}.
+        </h1>
+        <p className="apple-subhead mt-4">
+          You’re signed in as <span className="font-medium text-[#1d1d1f]">{user.email}</span>. Next up: register for the webinar and join the WhatsApp group.
+        </p>
+      </Reveal>
+
+      <Stagger className="mt-10 grid sm:grid-cols-2 gap-4" stagger={0.08}>
+        <StaggerItem>
+          <Link to="/webinar" className="apple-tile block min-h-0 bg-[#f5f5f7] hover:bg-[#ececef]" data-testid="dashboard-webinar-card">
+            <p className="apple-eyebrow">Action</p>
+            <p className="mt-3 text-xl font-semibold tracking-tight text-[#1d1d1f]">Reserve webinar seat →</p>
           </Link>
+        </StaggerItem>
+        <StaggerItem>
+          <Link to="/mentorship" className="apple-tile block min-h-0 bg-[#f5f5f7] hover:bg-[#ececef]" data-testid="dashboard-mentorship-card">
+            <p className="apple-eyebrow">Action</p>
+            <p className="mt-3 text-xl font-semibold tracking-tight text-[#1d1d1f]">Request 1:1 mentorship →</p>
+          </Link>
+        </StaggerItem>
+        {user.is_admin ? (
+          <StaggerItem className="sm:col-span-2">
+            <Link to="/admin" className="apple-tile block min-h-0 bg-[#1d1d1f] text-white hover:bg-neutral-800" data-testid="dashboard-admin-card">
+              <p className="apple-eyebrow text-white/50">Admin</p>
+              <p className="mt-3 text-xl font-semibold tracking-tight">Open admin dashboard →</p>
+            </Link>
+          </StaggerItem>
         ) : null}
-      </div>
+      </Stagger>
     </div>
   );
 }

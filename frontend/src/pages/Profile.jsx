@@ -36,7 +36,7 @@ function storageKey(email) {
 function Field({ id, label, required, children, error, hint }) {
   return (
     <div>
-      <Label htmlFor={id} className="text-xs font-bold uppercase tracking-wider">
+      <Label htmlFor={id} className="apple-label">
         {label} {required ? <span className="text-neutral-950">*</span> : <span className="text-neutral-400 normal-case font-normal">(optional)</span>}
       </Label>
       <div className="mt-2">{children}</div>
@@ -136,30 +136,30 @@ export default function Profile() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-5 sm:px-8 py-12 md:py-20" data-testid="page-profile">
-      <p className="label-eyebrow mb-4">Profile</p>
-      <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.95]">
+    <div className="apple-page apple-page-y text-left" data-testid="page-profile">
+      <p className="apple-eyebrow mb-4">Profile</p>
+      <h1 className="apple-headline">
         Complete Your Profile
       </h1>
-      <p className="mt-5 text-lg text-neutral-600 max-w-2xl">
+      <p className="apple-subhead mt-5">
         Build your professional profile to unlock opportunities, mentorship, and webinars.
       </p>
 
       {/* Completion bar */}
-      <div className="mt-10 border border-neutral-200 p-5" data-testid="profile-completion">
+      <div className="mt-10 apple-panel max-w-2xl" data-testid="profile-completion">
         <div className="flex items-center justify-between mb-3">
-          <p className="label-eyebrow">Profile completion</p>
+          <p className="apple-eyebrow">Profile completion</p>
           <p className="text-sm font-bold tracking-tight">{completion}%</p>
         </div>
-        <div className="h-2 w-full bg-neutral-100" aria-hidden="true">
+        <div className="apple-progress" aria-hidden="true">
           <div
-            className="h-2 bg-neutral-950 transition-all duration-500"
+            className="h-full bg-pa-brand rounded-full transition-all duration-500"
             style={{ width: `${completion}%` }}
           />
         </div>
         {completion === 100 ? (
           <p className="mt-3 text-xs text-neutral-500 flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5" /> Looking sharp — your profile is complete.
+            <Check className="w-3.5 h-3.5" /> Looking sharp. Your profile is complete.
           </p>
         ) : (
           <p className="mt-3 text-xs text-neutral-500">
@@ -171,19 +171,19 @@ export default function Profile() {
       {/* Form */}
       <form
         onSubmit={handleSubmit}
-        className="mt-8 border-2 border-neutral-950 bg-white p-6 md:p-10 hard-shadow"
+        className="mt-8 apple-panel max-w-2xl"
         data-testid="profile-form"
         noValidate
       >
-        <p className="label-eyebrow mb-1">Required</p>
-        <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-6">The essentials</h2>
+        <p className="apple-eyebrow mb-1">Required</p>
+        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-6">The essentials</h2>
 
         <div className="grid sm:grid-cols-2 gap-5">
           <Field id="full_name" label="Full Name" required error={errors.full_name}>
             <Input
               id="full_name" data-testid="profile-input-name"
               value={form.full_name} onChange={(e) => update("full_name", e.target.value)}
-              className="rounded-none border-neutral-950 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="rounded-xl border border-[#d2d2d7] h-11 text-base sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </Field>
 
@@ -191,7 +191,7 @@ export default function Profile() {
             <Input
               id="email" type="email" data-testid="profile-input-email"
               value={form.email} onChange={(e) => update("email", e.target.value)}
-              className="rounded-none border-neutral-950 h-11 focus-visible:ring-0 focus-visible:ring-offset-0 bg-neutral-50"
+              className="rounded-xl border border-[#d2d2d7] h-11 focus-visible:ring-0 focus-visible:ring-offset-0 bg-neutral-50"
               readOnly
             />
           </Field>
@@ -201,7 +201,7 @@ export default function Profile() {
               id="phone" inputMode="tel" placeholder="+91 98xxxxxxxx"
               data-testid="profile-input-phone"
               value={form.phone} onChange={(e) => update("phone", e.target.value)}
-              className="rounded-none border-neutral-950 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="rounded-xl border border-[#d2d2d7] h-11 text-base sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </Field>
 
@@ -210,7 +210,7 @@ export default function Profile() {
               id="location" placeholder="City, State"
               data-testid="profile-input-location"
               value={form.location} onChange={(e) => update("location", e.target.value)}
-              className="rounded-none border-neutral-950 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="rounded-xl border border-[#d2d2d7] h-11 text-base sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </Field>
 
@@ -224,7 +224,7 @@ export default function Profile() {
                 id="linkedin_url" type="url" placeholder="https://www.linkedin.com/in/your-handle"
                 data-testid="profile-input-linkedin"
                 value={form.linkedin_url} onChange={(e) => update("linkedin_url", e.target.value)}
-                className="rounded-none border-neutral-950 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="rounded-xl border border-[#d2d2d7] h-11 text-base sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </Field>
           </div>
@@ -232,8 +232,8 @@ export default function Profile() {
 
         <div className="border-t border-neutral-200 my-10" />
 
-        <p className="label-eyebrow mb-1">Optional</p>
-        <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-6">Stand out</h2>
+        <p className="apple-eyebrow mb-1">Optional</p>
+        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-6">Stand out</h2>
 
         <div className="grid sm:grid-cols-2 gap-5">
           <Field id="college_or_company" label="Current College / Company">
@@ -241,7 +241,7 @@ export default function Profile() {
               id="college_or_company" data-testid="profile-input-college"
               placeholder="e.g. SRCC / Razorpay"
               value={form.college_or_company} onChange={(e) => update("college_or_company", e.target.value)}
-              className="rounded-none border-neutral-950 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="rounded-xl border border-[#d2d2d7] h-11 text-base sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </Field>
 
@@ -250,7 +250,7 @@ export default function Profile() {
               id="interested_role" data-testid="profile-input-role"
               value={form.interested_role}
               onChange={(e) => update("interested_role", e.target.value)}
-              className="w-full h-11 rounded-none border border-neutral-950 px-3 bg-white text-sm focus:outline-none"
+              className="w-full h-11 rounded-xl border border-[#d2d2d7] px-3 bg-white text-sm focus:outline-none"
             >
               <option value="">Choose a role…</option>
               {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -258,12 +258,12 @@ export default function Profile() {
           </Field>
 
           <div className="sm:col-span-2">
-            <Field id="portfolio_url" label="Portfolio URL" error={errors.portfolio_url} hint="Personal site, Notion, Behance, GitHub — anything that shows your work.">
+            <Field id="portfolio_url" label="Portfolio URL" error={errors.portfolio_url} hint="Personal site, Notion, Behance, GitHub: anything that shows your work.">
               <Input
                 id="portfolio_url" type="url" placeholder="https://yourname.com"
                 data-testid="profile-input-portfolio"
                 value={form.portfolio_url} onChange={(e) => update("portfolio_url", e.target.value)}
-                className="rounded-none border-neutral-950 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="rounded-xl border border-[#d2d2d7] h-11 text-base sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </Field>
           </div>
@@ -275,14 +275,14 @@ export default function Profile() {
                 data-testid="profile-input-bio"
                 placeholder="One paragraph: who you are, what you’re building, what you want next."
                 value={form.bio} onChange={(e) => update("bio", e.target.value)}
-                className="rounded-none border-neutral-950 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="rounded-xl border border-[#d2d2d7] focus-visible:ring-0 focus-visible:ring-offset-0"
               />
               <p className="mt-1.5 text-xs text-neutral-400">{(form.bio || "").length}/400</p>
             </Field>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mt-10 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-xs text-neutral-500 flex items-start gap-2 max-w-md">
             <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
             Your information is private and only used to improve mentorship and career opportunities.
@@ -290,7 +290,7 @@ export default function Profile() {
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center justify-center gap-2 bg-neutral-950 text-white px-7 py-3.5 font-bold disabled:opacity-60 hover:bg-neutral-800"
+            className="inline-flex items-center justify-center gap-2 apple-btn apple-btn-dark disabled:opacity-60 w-full sm:w-auto"
             data-testid="profile-save-btn"
           >
             {saving ? (
