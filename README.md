@@ -79,6 +79,8 @@ npm install
 |----------|---------|
 | `GOOGLE_APPS_SCRIPT_WAITLIST_URL` | Apps Script web app URL from `scripts/google-apps-script/Waitlist.gs` (server-only; not `REACT_APP_*`) |
 
+The waitlist serverless function lives at `frontend/api/waitlist/join.js` (and `api/` at repo root). After deploy, Vercel → Project → **Functions** should list `/api/waitlist/join`. If POSTs still return 405 + `index.html`, the function was not built — check Root Directory matches where `api/` was placed.
+
 Templates: `backend/.env.example`, `frontend/.env.example`.
 
 ## Run locally
