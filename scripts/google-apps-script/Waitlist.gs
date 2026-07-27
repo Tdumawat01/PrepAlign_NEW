@@ -7,8 +7,10 @@
  * 3. Deploy → New deployment → Type: Web app
  *    - Execute as: Me
  *    - Who has access: Anyone
- * 4. Copy the Web app URL into backend/.env:
- *    GOOGLE_APPS_SCRIPT_WAITLIST_URL=https://script.google.com/macros/s/.../exec
+ * 4. Copy the Web app URL into:
+ *    - Vercel env (Production): GOOGLE_APPS_SCRIPT_WAITLIST_URL  ← live site form
+ *    - backend/.env (local FastAPI): same key
+ *    Never commit the live URL. Never prefix it with REACT_APP_.
  * 5. Redeploy after any script edits (New version).
  *
  * Sheet columns (row 1 headers, data from row 2):

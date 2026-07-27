@@ -99,8 +99,9 @@ export async function submitWaitlist(form) {
 
   const payload = buildWaitlistPayload(form);
 
-  // Provider: backend proxy → Google Apps Script (see backend GOOGLE_APPS_SCRIPT_WAITLIST_URL)
-  // To migrate to Supabase later, replace this block only.
+  // Provider: /api/waitlist/join → Google Apps Script → Sheets
+  // Prod (Vercel): api/waitlist/join.js with GOOGLE_APPS_SCRIPT_WAITLIST_URL
+  // Local FastAPI: set REACT_APP_BACKEND_URL so API points at the backend
   const { data } = await axios.post(`${API}/waitlist/join`, payload, {
     timeout: 45000,
   });

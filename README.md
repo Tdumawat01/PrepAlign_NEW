@@ -71,7 +71,13 @@ npm install
 
 | Variable | Purpose |
 |----------|---------|
-| `REACT_APP_BACKEND_URL` | Backend base URL, no trailing slash (`http://localhost:8000`) |
+| `REACT_APP_BACKEND_URL` | Backend base URL, no trailing slash (`http://localhost:8000`). Leave unset on Vercel so the waitlist uses the serverless `/api/waitlist/join` proxy. |
+
+**Vercel (waitlist → Google Sheets):**
+
+| Variable | Purpose |
+|----------|---------|
+| `GOOGLE_APPS_SCRIPT_WAITLIST_URL` | Apps Script web app URL from `scripts/google-apps-script/Waitlist.gs` (server-only; not `REACT_APP_*`) |
 
 Templates: `backend/.env.example`, `frontend/.env.example`.
 
